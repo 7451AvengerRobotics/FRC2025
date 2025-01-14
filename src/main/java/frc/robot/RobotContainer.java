@@ -65,8 +65,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera1, drive::getPose),
-                new VisionIOPhotonVisionSim(camera1Name, robotToCamera2, drive::getPose));
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera1, drive::getPose));
+                //new VisionIOPhotonVisionSim(camera1Name, robotToCamera2, drive::getPose));
         break;
 
       default:
