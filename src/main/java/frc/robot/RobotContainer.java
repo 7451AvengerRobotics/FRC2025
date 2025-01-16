@@ -10,13 +10,22 @@ import frc.robot.subsystems.Swerve.*;
 import frc.robot.subsystems.vision.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import static frc.robot.subsystems.vision.VisionConstants.*;
+
+import java.util.List;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -125,6 +134,20 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
+
+    Pose2d currentPose = drive.getPose();
+    Pose2d startPose = new Pose2d(currentPose.getTranslation(), new Rotation2d());
+    Pose2d endPose =new Pose2d(currentPose.getTranslation().plus(new Translation2d(2.0, 0)), new Rotation2d());
+
+    List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPose, endPose);
+    PathPlannerPath path = new PathPlannerPath(
+      waypoints, 
+      new PathConstraints(2.0, 2.0, 
+      Units.degreesToRadians(360), Units.degreesToRadians(540)), 
+      null, 
+      new GoalEndState(0.0, currentPose.getRotation()));
+
+    controller.R1().onTrue(AutoBuilder.followPath(path));
   }
 
   /**
