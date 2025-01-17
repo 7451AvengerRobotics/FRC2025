@@ -147,7 +147,7 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.cross().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    controller.L1().onTrue(
+    controller.L1().whileTrue(
         DriveCommands.joystickDriveAtAngle(
             drive, 
             () -> controller.getLeftY(),
