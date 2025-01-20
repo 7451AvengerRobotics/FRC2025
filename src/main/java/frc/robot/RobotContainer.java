@@ -15,14 +15,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
 import static frc.robot.subsystems.vision.VisionConstants.*;
-
-
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
-import com.pathplanner.lib.auto.AutoBuilder;
 
 
 /**
@@ -36,7 +29,6 @@ public class RobotContainer {
   private final Vision vision;
   private final Drive drive;
   //private final SendableChooser<Command> autoChooser;
-  private final LoggedDashboardChooser<Command> autoChooser1;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -93,29 +85,11 @@ public class RobotContainer {
         break;
     }
 
-    autoChooser1 = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-
-    autoChooser1.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser1.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser1.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser1.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser1.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser1.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the trigger bindings
     configureBindings();
 
-
-    //autoChooser = AutoBuilder.buildAutoChooser();
   }
 
  
@@ -141,15 +115,6 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.cross().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    controller.L1().whileTrue(
-        DriveCommands.joystickDriveAtAngle(
-            drive, 
-            () -> controller.getLeftY(),
-            () -> controller.getLeftX(),
-            () -> new Rotation2d(Math.toDegrees(90))
-        )
-    );
-
     // Reset gyro to 0° when B button is pressed
     controller
         .square()
@@ -171,9 +136,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return autoChooser.getSelected();
-    //return drive.followPathCommand("Example Path");s
-    return autoChooser1.get();
+    return drive.followPathCommand("Example Path");
     
   }
 }
