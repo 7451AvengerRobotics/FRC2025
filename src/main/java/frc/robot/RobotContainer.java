@@ -8,10 +8,13 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve.*;
 import frc.robot.subsystems.vision.*;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.Constants.FieldConstants.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -128,6 +131,7 @@ public class RobotContainer {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
     controller.R1().onTrue(drive.driveToPose(Processor.centerFace));
+    SmartDashboard.putData("trajectory", drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace).plus(new Transform2d(new Translation2d(2, 0), new Rotation2d(0)))));
   }
 
   /**
