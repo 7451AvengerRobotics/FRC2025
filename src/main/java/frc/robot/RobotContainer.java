@@ -130,8 +130,8 @@ public class RobotContainer {
                 .ignoringDisable(true));
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
-    controller.R1().onTrue(drive.driveToPose(Processor.centerFace));
-    SmartDashboard.putData("trajectory", drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace).plus(new Transform2d(new Translation2d(2, 0), new Rotation2d(0)))));
+    controller.R1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
+    SmartDashboard.putData("trajectory", drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
   }
 
   /**
