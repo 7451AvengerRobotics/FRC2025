@@ -47,8 +47,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-
 public class Drive extends SubsystemBase {
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY =
@@ -63,6 +61,7 @@ public class Drive extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   private final Field2d m_field = new Field2d();
+
 
   // PathPlanner config constants
   private static final double ROBOT_MASS_KG = 74.088;
@@ -224,9 +223,9 @@ public class Drive extends SubsystemBase {
 
   public Command driveToPose(Pose2d pose) {
     PathConstraints constraints = new PathConstraints(
-      this.getMaxLinearSpeedMetersPerSec(),
-      1, 
-      this.getMaxAngularSpeedRadPerSec(), 
+      this.getMaxLinearSpeedMetersPerSec()* 0.5,
+      0.2, 
+      this.getMaxAngularSpeedRadPerSec()*0.5, 
       Units.degreesToRadians(360));
 
     return AutoBuilder.pathfindToPose(pose, constraints, MetersPerSecond.of(0));
