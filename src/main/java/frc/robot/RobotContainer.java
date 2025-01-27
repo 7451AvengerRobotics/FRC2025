@@ -54,7 +54,6 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVision(limelightCamera, robotToCamera2),
                 new VisionIOPhotonVision(camera0Name, robotToCamera1));
-                //new VisionIOPhotonVision(camera1Name, robotToCamera2));
         break;
 
       case SIM:
@@ -69,8 +68,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(camera0Name, robotToCamera1, drive::getPose));
-                //new VisionIOPhotonVisionSim(camera1Name, robotToCamera2, drive::getPose));
+                new VisionIOPhotonVisionSim(camera0Name, robotToCamera1, drive::getPose),
+                new VisionIOPhotonVisionSim(camera1Name, robotToCamera2, drive::getPose));
         break;
 
       default:
@@ -131,7 +130,7 @@ public class RobotContainer {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
     controller.R1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
-    controller.L1().whileTrue(drive.driveToReef());
+    controller.L1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(1.5,0), new Rotation2d(0))))));
     SmartDashboard.putData("trajectory", drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1.5, 0), new Rotation2d(0))))));
   }
 
