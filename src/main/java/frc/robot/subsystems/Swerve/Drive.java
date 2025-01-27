@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
@@ -229,6 +230,22 @@ public class Drive extends SubsystemBase {
       Units.degreesToRadians(180));
 
     return AutoBuilder.pathfindToPose(pose, constraints, MetersPerSecond.of(0));
+  }
+
+  public Command driveToReef( ){
+    PathConstraints constraints = new PathConstraints(
+      this.getMaxLinearSpeedMetersPerSec()* 0.5,
+      0.2, 
+      this.getMaxAngularSpeedRadPerSec()*0.5, 
+      Units.degreesToRadians(360)
+    );
+
+    if ((this.getPose().getX() <= 144 && this.getPose().getX() > 98) && (this.getPose().getY() > 60 && this.getPose().getY() <= 158.500) ){
+      return AutoBuilder.pathfindToPose(FieldConstants.Reef.centerFaces[0], constraints, MetersPerSecond.of(0));
+    }
+    else{
+      return null
+    }
   }
 
   /**
