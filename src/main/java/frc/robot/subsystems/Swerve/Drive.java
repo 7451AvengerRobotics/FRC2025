@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
@@ -65,9 +66,9 @@ public class Drive extends SubsystemBase {
 
 
   // PathPlanner config constants
-  private static final double ROBOT_MASS_KG = 74.088;
-  private static final double ROBOT_MOI = 6.883;
-  private static final double WHEEL_COF = 1.2;
+  private static final double ROBOT_MASS_KG = 56.7;
+  private static final double ROBOT_MOI = 3.00241;
+  private static final double WHEEL_COF = 1.0;
   private static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
@@ -224,27 +225,23 @@ public class Drive extends SubsystemBase {
 
   public Command driveToPose(Pose2d pose) {
     PathConstraints constraints = new PathConstraints(
-      2,
-      1, 
-      270, 
+      2.5,
+      2, 
+      Units.degreesToRadians(270), 
       Units.degreesToRadians(180));
 
     return AutoBuilder.pathfindToPose(pose, constraints, MetersPerSecond.of(0));
   }
 
-  public Command driveToReef( ){
-    PathConstraints constraints = new PathConstraints(
-      this.getMaxLinearSpeedMetersPerSec()* 0.5,
-      0.2, 
-      this.getMaxAngularSpeedRadPerSec()*0.5, 
-      Units.degreesToRadians(360)
-    );
-
-    if ((this.getPose().getX() <= 144 && this.getPose().getX() > 98) && (this.getPose().getY() > 60 && this.getPose().getY() <= 158.500) ){
-      return AutoBuilder.pathfindToPose(FieldConstants.Reef.centerFaces[0], constraints, MetersPerSecond.of(0));
+  public Command driveToReef(Pose2d elsePose, Pose2d drivePose){
+    if (drivePose.getX() >0 && drivePose.getY() > 0.0) {
+      return driveToPose(new Pose2d(
+        Units.inchesToMeters(144.003),
+        Units.inchesToMeters(158.500),
+        Rotation2d.fromDegrees(180)));
     }
     else{
-      return null
+      return driveToPose(elsePose);
     }
   }
 
