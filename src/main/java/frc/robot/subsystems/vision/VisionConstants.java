@@ -24,7 +24,7 @@ public class VisionConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   // Camera names, must match names configured on coprocessor
-  public static String limelightCamera = "limelight_camera";
+  public static String limelightCamera = "Limelight";
   public static String camera0Name = "Camera_OG";
   public static String camera1Name = "camera_1";
 
@@ -33,7 +33,7 @@ public class VisionConstants {
   public static Transform3d robotToCamera1 =
       new Transform3d(0.375, -0.33655, 0, new Rotation3d(0.0, -0.611, Math.PI/2));
   public static Transform3d robotToCamera2 =
-      new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI));
+      new Transform3d(-0.27305, 0, 0.4, new Rotation3d(0.0, -0.4105, Math.PI));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;

@@ -52,7 +52,7 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOLimelight(limelightCamera, drive::getRotation),
+                new VisionIOPhotonVision(limelightCamera, robotToCamera2),
                 new VisionIOPhotonVision(camera0Name, robotToCamera1));
                 //new VisionIOPhotonVision(camera1Name, robotToCamera2));
         break;
