@@ -37,11 +37,9 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
@@ -233,17 +231,6 @@ public class Drive extends SubsystemBase {
     return AutoBuilder.pathfindToPose(pose, constraints, MetersPerSecond.of(0));
   }
 
-  public Command driveToReef(Pose2d elsePose, Pose2d drivePose){
-    if (drivePose.getX() >0 && drivePose.getY() > 0.0) {
-      return driveToPose(new Pose2d(
-        Units.inchesToMeters(144.003),
-        Units.inchesToMeters(158.500),
-        Rotation2d.fromDegrees(180)));
-    }
-    else{
-      return driveToPose(elsePose);
-    }
-  }
 
   /**
    * Runs the drive at the desired velocity.
