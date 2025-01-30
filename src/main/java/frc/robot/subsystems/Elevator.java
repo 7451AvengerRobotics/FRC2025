@@ -10,35 +10,26 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.RobotConstants.*;
 
-public class Claw extends SubsystemBase {
-
-    private final SparkFlex claw;
-    private final RelativeEncoder clawEncoder;
-    private final VoltageOut m_sysIdControl = new VoltageOut(0);
-
-
-    private final TalonFX pivot;
+public class Elevator extends SubsystemBase {
+    private final TalonFX elevator;
     private TalonFXConfiguration cfg;
-    private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
+    private final MotionMagicVoltage elevatorRequest = new MotionMagicVoltage(0);
     private final SysIdRoutine sysId;
+    private final VoltageOut m_sysIdControl = new VoltageOut(0);
+    
 
-    public Claw(){
+    public Elevator(){
         super();
 
-        setName("Claw");
+        setName("Elevator");
 
-        claw = new SparkFlex(ClawConstants.kClawID, MotorType.kBrushless);
-        clawEncoder = claw.getEncoder();
-        pivot = new TalonFX(ClawConstants.kClawPivotID);
+        elevator = new TalonFX(ElevatorConstants.kElevatorID);
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
@@ -49,14 +40,14 @@ public class Claw extends SubsystemBase {
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;
-        slot0.kS = ClawConstants.clawPivotkS;
-        slot0.kV = ClawConstants.clawPivotkV;
-        slot0.kA = ClawConstants.clawPivotkA;
-        slot0.kP = ClawConstants.clawPivotkP;
-        slot0.kI = ClawConstants.clawPivotkI;
-        slot0.kD = ClawConstants.clawPivotkD;
+        slot0.kS = ElevatorConstants.elevatorkS;
+        slot0.kV = ElevatorConstants.elevatorkV;
+        slot0.kA = ElevatorConstants.elevatorkA;
+        slot0.kP = ElevatorConstants.elevatorkP;
+        slot0.kI = ElevatorConstants.elevatorkI;
+        slot0.kD = ElevatorConstants.elevatorkD;
 
-        pivot.getConfigurator().apply(cfg);
+        elevator.getConfigurator().apply(cfg);
 
 
 
@@ -67,10 +58,10 @@ public class Claw extends SubsystemBase {
                     Volts.of(4), // Reduce dynamic voltage to 4 to prevent brownout
                     null,          // Use default timeout (10 s)
                                            // Log state with Phoenix SignalLogger class
-                    state -> SignalLogger.writeString("clawPivotState", state.toString())
+                    state -> SignalLogger.writeString("elevatorState", state.toString())
                 ),
                 new SysIdRoutine.Mechanism(
-                    volts -> pivot.setControl(m_sysIdControl.withOutput(volts)),
+                    volts -> elevator.setControl(m_sysIdControl.withOutput(volts)),
                     null,
                     this
                 )
@@ -79,31 +70,14 @@ public class Claw extends SubsystemBase {
         SignalLogger.start();
     }
 
-    public void run(double power){
-        claw.set(power);
-    }
-
-    public void pivot(double angle){
-        pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
+    public void elevate(double height){
+        elevator.setControl(elevatorRequest.withPosition(height).withSlot(0));
     }
     
-    public double getEncoderPosition(){
-        return clawEncoder.getPosition();
-    }
 
-    public Command setClawPower(double power){
-        return runEnd(
-            () -> {
-                run(power);
-            }, 
-            () -> {
-                run(0);
-            });
-    }
-
-    public Command setPivotAngle(double angle) {
+    public Command setElevatorPosition(double height) {
         return run(() -> {
-            pivot(angle);
+            elevate(height);
         });
     }
 

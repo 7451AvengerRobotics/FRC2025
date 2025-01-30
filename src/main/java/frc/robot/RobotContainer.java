@@ -38,7 +38,6 @@ public class RobotContainer {
   public RobotContainer() {
 
 
-
     switch (SimConstants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
@@ -52,8 +51,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVision(limelightCamera, robotToCamera2),
-                new VisionIOPhotonVision(camera0Name, robotToCamera1));
+                new VisionIOPhotonVision(limelightCamera, robotToCamera2));
+                //new VisionIOPhotonVision(camera0Name, robotToCamera1));
         break;
 
       case SIM:
@@ -91,6 +90,7 @@ public class RobotContainer {
 
     // Configure the trigger bindings
     configureBindings();
+
 
   }
 
@@ -130,7 +130,8 @@ public class RobotContainer {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
     controller.R1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
-    controller.L1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(1,0), new Rotation2d(0))))));
+    controller.L1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+  // controller.povLeft().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(drive::getPose.plus(new Transform2d(new Translation2d(0,-0.15), new Rotation2d(0))))));
     SmartDashboard.putData("trajectory", drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1.5, 0), new Rotation2d(0))))));
   }
 

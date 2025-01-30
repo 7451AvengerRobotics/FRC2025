@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -128,7 +129,7 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(1, 0.0, 0.0), new PIDConstants(2.5, 0.0, 0.0)),
+            new PIDConstants(1.5427, 0.0, 0.0), new PIDConstants(2.2224, 0.0, 0.0)),
         PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -184,7 +185,6 @@ public class Drive extends SubsystemBase {
       Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
     }
-
     // Update odometry
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
@@ -223,11 +223,10 @@ public class Drive extends SubsystemBase {
 
   public Command driveToPose(Pose2d pose) {
     PathConstraints constraints = new PathConstraints(
-      2.5,
-      2, 
-      Units.degreesToRadians(270), 
-      Units.degreesToRadians(180));
-
+      3,
+      1.5, 
+      Units.degreesToRadians(300), 
+      Units.degreesToRadians(150));   
     return AutoBuilder.pathfindToPose(pose, constraints, MetersPerSecond.of(0));
   }
 
@@ -394,4 +393,5 @@ public class Drive extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
+
 }
