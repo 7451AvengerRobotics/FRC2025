@@ -2,7 +2,9 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -10,38 +12,38 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import frc.robot.Constants.*;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Intake extends SubsystemBase {
 
-    private final SparkFlex intake;
-    private final RelativeEncoder intakeEncoder;
+    private final TalonFX intake = new TalonFX(IntakeConstants.kIntakeID);;
     private final VoltageOut m_sysIdControl = new VoltageOut(0);
-    
-
-    private final TalonFX pivot;
-    private TalonFXConfiguration cfg;
+    private final TalonFX intake_pivot = new TalonFX(IntakeConstants.kIntakePivotID);;
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
-    private final SysIdRoutine sysId;
-
-
+    private final SysIdRoutine sysId  =
+    new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,         // Use default ramp rate (1 V/s)
+            Volts.of(1.5), // Reduce dynamic voltage to 4 to prevent brownout
+            null,          // Use default timeout (10 s)
+                                   // Log state with Phoenix SignalLogger class
+            state -> SignalLogger.writeString("intakePivotState", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            volts -> intake_pivot.setControl(m_sysIdControl.withOutput(volts)),
+            null,
+            this
+        )
+    );
 
     public Intake(){
         super();
 
-        setName("Intake");
-
-        intake = new SparkFlex(IntakeConstants.kIntakeID, MotorType.kBrushless);
-        intakeEncoder = intake.getEncoder();
-
-        pivot = new TalonFX(IntakeConstants.kIntakePivotID);
+        setName("Intake_Pivot");
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
@@ -59,25 +61,21 @@ public class Intake extends SubsystemBase {
         slot0.kI = IntakeConstants.intakePivotkI;
         slot0.kD = IntakeConstants.intakePivotkD;
 
-        pivot.getConfigurator().apply(cfg);
+        StatusCode status = StatusCode.StatusCodeNotInitialized;
+        for (int i = 0; i < 5; ++i) {
+            status = intake_pivot.getConfigurator().apply(cfg);
+            if (status.isOK()) 
+            break;
+        }
+        if (!status.isOK()) {
+            System.out.println("Could not configure device. Error: " + status.toString());
+        }
 
-        
+        BaseStatusSignal.setUpdateFrequencyForAll(250,
+            intake_pivot.getPosition(),
+            intake_pivot.getVelocity(),
+            intake_pivot.getMotorVoltage());
 
-        sysId =
-            new SysIdRoutine(
-                new SysIdRoutine.Config(
-                    null,         // Use default ramp rate (1 V/s)
-                    Volts.of(4), // Reduce dynamic voltage to 4 to prevent brownout
-                    null,          // Use default timeout (10 s)
-                                           // Log state with Phoenix SignalLogger class
-                    state -> SignalLogger.writeString("intakePivotState", state.toString())
-                ),
-                new SysIdRoutine.Mechanism(
-                    volts -> pivot.setControl(m_sysIdControl.withOutput(volts)),
-                    null,
-                    this
-                )
-            );
 
         SignalLogger.start();
     }
@@ -87,14 +85,10 @@ public class Intake extends SubsystemBase {
     }
 
     public void pivotIntake(double angle){
-        pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
-    }
-    
-    public double getEncoderPosition(){
-        return intakeEncoder.getPosition(); 
+        intake_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
     }
 
-    public Command setintakePower(double power){
+    public Command setintakePower(double power) {
         return runEnd(
             () -> {
                 this.runIntake(power);
@@ -104,16 +98,23 @@ public class Intake extends SubsystemBase {
             });
     }
 
-    public Command setPivotAngle(double angle) {
+    public Command setIntakePivotAngle(double angle) {
         return run(() -> {
             this.pivotIntake(angle);
         });
     }
 
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    public Command intakeSysIdQuasistatic(SysIdRoutine.Direction direction) {
         return sysId.quasistatic(direction);
     }
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    public Command intakeSysIdDynamic(SysIdRoutine.Direction direction) {
         return sysId.dynamic(direction);
+    }
+
+    @Override
+    public void periodic(){
+
+        SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
+
     }
 }

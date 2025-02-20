@@ -18,7 +18,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Unit;
+
 
 public class VisionConstants {
   // AprilTag layout
@@ -33,7 +33,7 @@ public class VisionConstants {
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
   public static Transform3d robotToCamera1 =
-      new Transform3d(Units.inchesToMeters(14.75), Units.inchesToMeters(13.25), Units.inchesToMeters(9.25), new Rotation3d(0.0, -Units.degreesToRadians(34), Math.PI/2));
+      new Transform3d(Units.inchesToMeters(14.75), Units.inchesToMeters(13.25), Units.inchesToMeters(9.25), new Rotation3d(Math.PI, -Units.degreesToRadians(34), Math.PI/2));
   public static Transform3d robotToCamera2 =
       new Transform3d(-0.27305, 0, Units.inchesToMeters(14.5), new Rotation3d(0.0, -0.4105, Math.PI));
 
@@ -51,7 +51,7 @@ public class VisionConstants {
   public static double[] cameraStdDevFactors =
       new double[] {
         1.0, // Camera 0
-        1.0 // Camera 1
+        1.0 // Camera 1.0
       };
 
   // Multipliers to apply for MegaTag 2 observations
