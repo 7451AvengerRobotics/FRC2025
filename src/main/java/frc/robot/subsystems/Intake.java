@@ -130,6 +130,7 @@ public class Intake extends SubsystemBase {
     public void periodic(){
 
         SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
+        SmartDashboard.putBoolean("Intake Beam Break", coralIntaked().getAsBoolean());
 
     }
 }

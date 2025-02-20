@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.commands.DriveCommands;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsNew;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.Elevator;
@@ -24,10 +25,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import java.util.List;
+
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -35,6 +39,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+
 
 
 /**
@@ -49,6 +54,10 @@ public class RobotContainer {
   private final Drive drive;
   //private final SendableChooser<Command> autoChooser;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
+
+  public final CommandSwerveDrivetrain drivetrain = TunerConstantsNew.createDrivetrain();
+
+  private final LoggedDashboardChooser<Command> autoChooser;
 
   // Subsytems
   private final Intake intake = new Intake();
@@ -110,6 +119,24 @@ public class RobotContainer {
 
     }
 
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
 
     // Configure the trigger bindings
     configureBindings();
@@ -159,10 +186,16 @@ public class RobotContainer {
     // SYSID CONTROLLS DO NOT DELETE
     // controller.L1().onTrue(Commands.runOnce(SignalLogger::start));
     // controller.R1().onTrue(Commands.runOnce(SignalLogger::stop));
-    // controller.circle().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // controller.R2().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // controller.R3().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // controller.L2().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // controller.triangle().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // controller.circle().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // controller.square().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // controller.cross().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+    // Drive Train SYSID
+    // controller.triangle().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    // controller.circle().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+    // controller.square().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    // controller.cross().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     controller.povLeft().whileTrue(Commands.runOnce(() -> {
       Pose2d currentPose = drive.getPose();
@@ -223,7 +256,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return drive.followPathCommand("Example Path");
-    
+    // return drive.followPathCommand("Example Path");
+    return autoChooser.get();
   }
 }
