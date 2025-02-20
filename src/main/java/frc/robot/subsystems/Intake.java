@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
@@ -13,6 +15,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class Intake extends SubsystemBase {
 
     private final TalonFX intake = new TalonFX(IntakeConstants.kIntakeID);;
+    private final DigitalInput beamBreak = new DigitalInput(0);
     private final VoltageOut m_sysIdControl = new VoltageOut(0);
     private final TalonFX intake_pivot = new TalonFX(IntakeConstants.kIntakePivotID);;
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
@@ -104,11 +108,22 @@ public class Intake extends SubsystemBase {
         });
     }
 
+    public boolean raiseIntake() {
+        if (intake.getVelocity(true).getValueAsDouble() < 200 && intake.getSupplyCurrent(true).getValueAsDouble() > 100) {
+            return true;
+        }
+        return false;
+    }
+
     public Command intakeSysIdQuasistatic(SysIdRoutine.Direction direction) {
         return sysId.quasistatic(direction);
     }
     public Command intakeSysIdDynamic(SysIdRoutine.Direction direction) {
         return sysId.dynamic(direction);
+    }
+
+    public BooleanSupplier coralIntaked() {
+        return beamBreak::get;
     }
 
     @Override
