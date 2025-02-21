@@ -14,6 +14,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+
 import frc.robot.Constants.RobotConstants.IntakeConstants;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,8 +33,8 @@ public class Intake extends SubsystemBase {
     private final SysIdRoutine sysId  =
     new SysIdRoutine(
         new SysIdRoutine.Config(
-            null,         // Use default ramp rate (1 V/s)
-            Volts.of(1.5), // Reduce dynamic voltage to 4 to prevent brownout
+            Volts.of(0.25).per(Second),         // Use default ramp rate (1 V/s)
+            Volts.of(1), // Reduce dynamic voltage to 4 to prevent brownout
             null,          // Use default timeout (10 s)
                                    // Log state with Phoenix SignalLogger class
             state -> SignalLogger.writeString("intakePivotState", state.toString())
@@ -52,6 +54,7 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = IntakeConstants.kIntakeGearRatio;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         MotionMagicConfigs mm = cfg.MotionMagic;
         mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
@@ -74,6 +77,8 @@ public class Intake extends SubsystemBase {
         if (!status.isOK()) {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
+
+        intake_pivot.getConfigurator().setPosition(0);
 
         BaseStatusSignal.setUpdateFrequencyForAll(250,
             intake_pivot.getPosition(),

@@ -179,17 +179,17 @@ public class RobotContainer {
                 .ignoringDisable(true));
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
-    controller.R1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
-    controller.cross().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    controller.triangle().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    // controller.R1().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0))))));
+    // controller.cross().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    // controller.triangle().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
 
     // SYSID CONTROLLS DO NOT DELETE
     // controller.L1().onTrue(Commands.runOnce(SignalLogger::start));
     // controller.R1().onTrue(Commands.runOnce(SignalLogger::stop));
-    // controller.triangle().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // controller.circle().whileTrue(intake.intakeSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // controller.square().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // controller.cross().whileTrue(intake.intakeSysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // controller.triangle().whileTrue(elevator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // controller.circle().whileTrue(elevator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // controller.square().whileTrue(elevator.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
+    // controller.cross().whileTrue(elevator.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Drive Train SYSID
     // controller.triangle().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -247,7 +247,10 @@ public class RobotContainer {
       AutoBuilder.followPath(path).schedule(); 
     }));
 
-    controller.PS().whileTrue(new ParallelCommandGroup(intake.setintakePower(1), index.setIndexPower(0.7), claw.setClawPower(0.5) ));
+    controller.PS().whileTrue(new ParallelCommandGroup(intake.setintakePower(1), index.setIndexPower(0.7), claw.setClawPower(0.5)));
+    controller.triangle().whileTrue(intake.setintakePower(1));
+    controller.circle().onTrue(intake.setIntakePivotAngle(-0.1876));
+    controller.square().onTrue(intake.setIntakePivotAngle(-0.0667));
   }
 
   /**

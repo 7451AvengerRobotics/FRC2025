@@ -31,7 +31,7 @@ public class Claw extends SubsystemBase {
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
     private final SysIdRoutine sysId = new SysIdRoutine(
         new SysIdRoutine.Config(
-            null,         // Use default ramp rate (1 V/s)
+            Volts.of(0.5).per(Second),         // Use default ramp rate (1 V/s)
             Volts.of(1.5), // Reduce dynamic voltage to 4 to prevent brownout
             null,          // Use default timeout (10 s)
                                    // Log state with Phoenix SignalLogger class
@@ -77,6 +77,8 @@ public class Claw extends SubsystemBase {
         if (!status.isOK()) {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
+
+        claw_pivot.getConfigurator().setPosition(0);
 
          BaseStatusSignal.setUpdateFrequencyForAll(250,
             claw_pivot.getPosition(),

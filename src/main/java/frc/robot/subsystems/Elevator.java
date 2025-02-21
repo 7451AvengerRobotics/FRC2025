@@ -2,16 +2,19 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,8 +29,8 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine sysId =
     new SysIdRoutine(
         new SysIdRoutine.Config(
-            null,         // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic voltage to 4 to prevent brownout
+            Volts.of(0.5).per(Second),         // Use default ramp rate (1 V/s)
+            Volts.of(1), // Reduce dynamic voltage to 4 to prevent brownout
             null,          // Use default timeout (10 s)
                                    // Log state with Phoenix SignalLogger class
             state -> SignalLogger.writeString("elevatorState", state.toString())
@@ -45,14 +48,17 @@ public class Elevator extends SubsystemBase {
         setName("Elevator");
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ElevatorConstants.kElevatorGearRatio;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(3)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;
+
+        
 
         slot0.kG = ElevatorConstants.elevatorkG;
         slot0.kS = ElevatorConstants.elevatorkS;
@@ -71,6 +77,8 @@ public class Elevator extends SubsystemBase {
         if (!status.isOK()) {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
+
+        elevator.getConfigurator().setPosition(0);
 
         BaseStatusSignal.setUpdateFrequencyForAll(250,
             elevator.getPosition(),

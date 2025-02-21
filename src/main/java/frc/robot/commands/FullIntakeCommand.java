@@ -37,12 +37,12 @@ public class FullIntakeCommand extends Command {
             intake.setIntakePivotAngle(30);
             intake.setintakePower(intakePercent)
                 .until(intake.coralIntaked())
-                .andThen(intake.setIntakePivotAngle(30))
+                .andThen(intake.setIntakePivotAngle(0.34))
                 .andThen(
                     new ParallelCommandGroup(
                         index.setIndexPower(indexPercent),
-                        claw.setClawPower(clawPercent),
-                        claw.setClawPivotAngle(30)
+                        claw.setClawPower(clawPercent)
+                        //claw.setClawPivotAngle(30)
                     )
                 );
         } else {
@@ -51,8 +51,8 @@ public class FullIntakeCommand extends Command {
                 .andThen(
                     new ParallelCommandGroup(
                         index.setIndexPower(indexPercent),
-                        claw.setClawPower(clawPercent),
-                        claw.setClawPivotAngle(30)
+                        claw.setClawPower(clawPercent)
+                        //claw.setClawPivotAngle(30)
                     )
                 );
         }
