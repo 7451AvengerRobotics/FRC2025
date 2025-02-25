@@ -26,16 +26,25 @@ public class VisionConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   // Camera names, must match names configured on coprocessor
-  public static String limelightCamera = "Limelight";
+  public static String limelight1Camera = "LimelightLeft";
+  public static String limelight2Camera = "Limelight";
   public static String camera0Name = "Camera_OG";
-  public static String camera1Name = "camera_1";
+  public static String camera1Name = "FrontRight";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
-  public static Transform3d robotToCamera1 =
-      new Transform3d(Units.inchesToMeters(14.75), Units.inchesToMeters(13.25), Units.inchesToMeters(9.25), new Rotation3d(Math.PI, -Units.degreesToRadians(34), Math.PI/2));
-  public static Transform3d robotToCamera2 =
-      new Transform3d(-0.27305, 0, Units.inchesToMeters(14.5), new Rotation3d(0.0, -0.4105, Math.PI));
+  public static Transform3d limelight3Transform3d =
+    new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(5.516), Units.inchesToMeters(5.887), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(10)));
+  public static Transform3d limelight2Transform3d =
+    new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(-10)));
+  public static Transform3d frontRightTransform3d =
+    new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(-30)));
+  public static Transform3d frontLeftTransform3d =
+    new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(12.48), Units.inchesToMeters(8.371), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(30)));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.3;
@@ -53,9 +62,4 @@ public class VisionConstants {
         1.0, // Camera 0
         1.0 // Camera 1.0
       };
-
-  // Multipliers to apply for MegaTag 2 observations
-  public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-  public static double angularStdDevMegatag2Factor =
-      Double.POSITIVE_INFINITY; // No rotation data available
 }

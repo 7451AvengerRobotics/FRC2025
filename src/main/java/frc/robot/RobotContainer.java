@@ -4,36 +4,35 @@
 
 package frc.robot;
 
+import frc.robot.Constants.ButtonConstants;
 import frc.robot.commands.DriveCommands;
-import frc.robot.generated.TunerConstants;
+import frc.robot.commands.FullIntakeCommand;
+import frc.robot.commands.LEDCommands.setLedColorCommand;
 import frc.robot.generated.TunerConstantsNew;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Index;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LedHandler;
 import frc.robot.subsystems.Swerve.*;
-import frc.robot.subsystems.vision.*;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.Constants.FieldConstants.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
-import static frc.robot.subsystems.vision.VisionConstants.*;
-
 import java.util.List;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
@@ -54,8 +53,7 @@ public class RobotContainer {
   private final Drive drive;
   //private final SendableChooser<Command> autoChooser;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
-
-  public final CommandSwerveDrivetrain drivetrain = TunerConstantsNew.createDrivetrain();
+  private final Joystick buttonPannel = new Joystick(0);
 
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -64,6 +62,8 @@ public class RobotContainer {
   private final Claw claw = new Claw();
   private final Elevator elevator = new Elevator();
   private final Index index = new Index();
+  private final LedHandler led = new LedHandler();
+
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -141,11 +141,34 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
 
+    led.setDefaultCommand(new setLedColorCommand(led, 255, 0, 0));
+
 
   }
 
  
   private void configureBindings() {
+
+      JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
+      JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
+      JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
+      JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
+      JoystickButton algae2 = new JoystickButton(buttonPannel, ButtonConstants.algae2);
+      JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
+      JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
+      JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
+      JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
+      JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
+      JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
+      JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
+
+      boolean intakeAll = buttonPannel.getRawAxis(ButtonConstants.intake1Axis) > 0;
+
+      if (intakeAll) {
+        new FullIntakeCommand(intake, index, claw, 1, 0.7, 0.2);
+      }
+
+      claw.setDefaultCommand(claw.setClawPivotAngle(0));
 
         drive.setDefaultCommand(
         DriveCommands.joystickDrive(
@@ -183,21 +206,7 @@ public class RobotContainer {
     // controller.cross().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
     // controller.triangle().whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
 
-    // SYSID CONTROLLS DO NOT DELETE
-    // controller.L1().onTrue(Commands.runOnce(SignalLogger::start));
-    // controller.R1().onTrue(Commands.runOnce(SignalLogger::stop));
-    // controller.triangle().whileTrue(elevator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // controller.circle().whileTrue(elevator.elevatorSysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // controller.square().whileTrue(elevator.elevatorSysIdDynamic(SysIdRoutine.Direction.kForward));
-    // controller.cross().whileTrue(elevator.elevatorSysIdDynamic(SysIdRoutine.Direction.kReverse));
-
-    // Drive Train SYSID
-    // controller.triangle().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-    // controller.circle().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-    // controller.square().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-    // controller.cross().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-
-    controller.povLeft().whileTrue(Commands.runOnce(() -> {
+    controller.L1().whileTrue(Commands.runOnce(() -> {
       Pose2d currentPose = drive.getPose();
       
       // The rotation component in these poses represents the direction of travel
@@ -222,7 +231,7 @@ public class RobotContainer {
       AutoBuilder.followPath(path).schedule(); 
     }));
 
-    controller.povRight().whileTrue(Commands.runOnce(() -> {
+    controller.R1().whileTrue(Commands.runOnce(() -> {
       Pose2d currentPose = drive.getPose();
       
       // The rotation component in these poses represents the direction of travel
@@ -247,11 +256,15 @@ public class RobotContainer {
       AutoBuilder.followPath(path).schedule(); 
     }));
 
-    controller.PS().whileTrue(new ParallelCommandGroup(intake.setintakePower(1), index.setIndexPower(0.7), claw.setClawPower(0.5)));
-    controller.triangle().whileTrue(intake.setintakePower(1));
-    controller.circle().onTrue(intake.setIntakePivotAngle(-0.1876));
-    controller.square().onTrue(intake.setIntakePivotAngle(-0.0667));
+    controller.PS().whileTrue(new ParallelCommandGroup(intake.setintakePower(1), index.setIndexPower(0.7), claw.setClawPower(0.2)));
+    controller.circle().onTrue(new SequentialCommandGroup(claw.setClawPivotAngle(0).andThen(elevator.setElevatorPosition(2))));
+    controller.L1().onTrue(new SequentialCommandGroup(elevator.setElevatorPosition(0)));
+    controller.R1().onTrue(new ParallelCommandGroup(claw.setClawPivotAngle(0), (elevator.setElevatorPosition(5.58))));
+    controller.cross().onTrue(intake.setIntakePivotAngle(0.246));
+
+    controller.R2().whileTrue(new FullIntakeCommand(intake, index, claw, 0.7, 1, 0.4));
   }
+
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

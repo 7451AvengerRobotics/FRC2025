@@ -12,51 +12,36 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.RobotConstants.IntakeConstants;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Intake extends SubsystemBase {
 
     private final TalonFX intake = new TalonFX(IntakeConstants.kIntakeID);;
-    private final DigitalInput beamBreak = new DigitalInput(0);
-    private final VoltageOut m_sysIdControl = new VoltageOut(0);
     private final TalonFX intake_pivot = new TalonFX(IntakeConstants.kIntakePivotID);;
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
-    private final SysIdRoutine sysId  =
-    new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(0.25).per(Second),         // Use default ramp rate (1 V/s)
-            Volts.of(1), // Reduce dynamic voltage to 4 to prevent brownout
-            null,          // Use default timeout (10 s)
-                                   // Log state with Phoenix SignalLogger class
-            state -> SignalLogger.writeString("intakePivotState", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> intake_pivot.setControl(m_sysIdControl.withOutput(volts)),
-            null,
-            this
-        )
-    );
+    private final DigitalInput intakebreak = new DigitalInput(0);
 
     public Intake(){
         super();
 
-        setName("Intake_Pivot");
+        setName("Intake");
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = IntakeConstants.kIntakeGearRatio;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(1)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
@@ -93,6 +78,14 @@ public class Intake extends SubsystemBase {
         intake.set(power);
     }
 
+    public boolean getIntakeBreak() {
+        return !intakebreak.get();
+    }
+
+    public BooleanSupplier getIntakeBreakSupplier() {
+        return intakebreak::get;
+    }
+
     public void pivotIntake(double angle){
         intake_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
     }
@@ -105,6 +98,15 @@ public class Intake extends SubsystemBase {
             () -> {
                 this.runIntake(0);
             });
+    }
+
+    public Command dualIntake(double angle, double power) {
+       return run(
+        () -> {
+            this.runIntake(power);
+            this.setIntakePivotAngle(angle);
+        }
+       );
     }
 
     public Command setIntakePivotAngle(double angle) {
@@ -120,22 +122,12 @@ public class Intake extends SubsystemBase {
         return false;
     }
 
-    public Command intakeSysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return sysId.quasistatic(direction);
-    }
-    public Command intakeSysIdDynamic(SysIdRoutine.Direction direction) {
-        return sysId.dynamic(direction);
-    }
-
-    public BooleanSupplier coralIntaked() {
-        return beamBreak::get;
-    }
 
     @Override
     public void periodic(){
 
         SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
-        SmartDashboard.putBoolean("Intake Beam Break", coralIntaked().getAsBoolean());
+        SmartDashboard.putBoolean("break", intakebreak.get());
 
     }
 }

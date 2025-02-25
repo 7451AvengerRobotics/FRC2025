@@ -33,30 +33,17 @@ public class FullIntakeCommand extends Command {
     
     @Override 
     public void execute(){
-        if (intake.raiseIntake()) {
-            intake.setIntakePivotAngle(30);
-            intake.setintakePower(intakePercent)
-                .until(intake.coralIntaked())
-                .andThen(intake.setIntakePivotAngle(0.34))
+            new ParallelCommandGroup(intake.setintakePower(intakePercent), 
+                intake.setIntakePivotAngle(0.38)).until(intake::getIntakeBreak)
+            .andThen(intake.setIntakePivotAngle(0.24)).withTimeout(0.5)
                 .andThen(
                     new ParallelCommandGroup(
                         index.setIndexPower(indexPercent),
+                        claw.setClawPivotAngle(-0.07),
                         claw.setClawPower(clawPercent)
-                        //claw.setClawPivotAngle(30)
-                    )
+                    ).until(claw::clawBroke)
                 );
-        } else {
-            intake.setintakePower(intakePercent).until(intake.coralIntaked())
-            .andThen(intake.setIntakePivotAngle(clawPercent))
-                .andThen(
-                    new ParallelCommandGroup(
-                        index.setIndexPower(indexPercent),
-                        claw.setClawPower(clawPercent)
-                        //claw.setClawPivotAngle(30)
-                    )
-                );
-        }
-    }
+            }
     
     @Override
     public void end(boolean interrupted){

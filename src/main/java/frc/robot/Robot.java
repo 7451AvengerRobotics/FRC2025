@@ -18,6 +18,8 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -54,6 +56,9 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new NT4Publisher());
         new PowerDistribution(1, ModuleType.kRev);
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
+        DriverStation.startDataLog(DataLogManager.getLog(), false);
         break;
 
       case SIM:
@@ -109,6 +114,7 @@ public class Robot extends LoggedRobot {
 
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
+
   }
 
   /** This function is called once when the robot is disabled. */

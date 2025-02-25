@@ -1,0 +1,99 @@
+package frc.robot.subsystems;
+
+import static edu.wpi.first.units.Units.*;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+
+import frc.robot.Constants.RobotConstants.ClimberConstants;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class Climber extends SubsystemBase {
+
+    private final TalonFX climber = new TalonFX(ClimberConstants.kClimberID);;
+    private final MotionMagicVoltage climbRequest = new MotionMagicVoltage(0);
+
+    public Climber(){
+        super();
+
+        setName("Climber");
+
+        TalonFXConfiguration cfg = new TalonFXConfiguration();
+        FeedbackConfigs fdb = cfg.Feedback;
+        fdb.SensorToMechanismRatio = ClimberConstants.kClimberGearRatio;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        MotionMagicConfigs mm = cfg.MotionMagic;
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
+            .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
+
+        Slot0Configs slot0 = cfg.Slot0;
+        slot0.kS = ClimberConstants.climberkS;
+        slot0.kV = ClimberConstants.climberkV;
+        slot0.kA = ClimberConstants.climberkA;
+        slot0.kP = ClimberConstants.climberkP;
+        slot0.kI = ClimberConstants.climberkI;
+        slot0.kD = ClimberConstants.climberkD;
+
+        StatusCode status = StatusCode.StatusCodeNotInitialized;
+        for (int i = 0; i < 5; ++i) {
+            status = climber.getConfigurator().apply(cfg);
+            if (status.isOK()) 
+            break;
+        }
+        if (!status.isOK()) {
+            System.out.println("Could not configure device. Error: " + status.toString());
+        }
+
+        climber.getConfigurator().setPosition(0);
+
+        BaseStatusSignal.setUpdateFrequencyForAll(250,
+            climber.getPosition(),
+            climber.getVelocity(),
+            climber.getMotorVoltage());
+
+
+        SignalLogger.start();
+    }
+
+    public void runClimber(double power){
+        climber.set(power);
+    }
+
+    public void setAngle(double angle){
+        climber.setControl(climbRequest.withPosition(angle).withSlot(0));
+    }
+
+    public Command setClimberPower(double power) {
+        return runEnd(
+            () -> {
+                this.runClimber(power);
+            }, 
+            () -> {
+                this.runClimber(0);
+            });
+    }
+
+    public Command setClimberAngle(double angle) {
+        return run(() -> {
+            this.setAngle(angle);
+        });
+    }
+
+    @Override
+    public void periodic(){
+
+        SmartDashboard.putNumber("Climber Rotations", climber.getPosition().getValueAsDouble());
+
+    }
+}

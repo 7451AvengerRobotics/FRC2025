@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
@@ -10,39 +12,26 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.RobotConstants.*;
 
 public class Claw extends SubsystemBase {
 
     private final SparkFlex claw;
     private final RelativeEncoder clawEncoder;
-    private final VoltageOut m_sysIdControl = new VoltageOut(0);
+    private final DigitalInput clawBeamBreak = new DigitalInput(4);
     private final TalonFX claw_pivot = new TalonFX(ClawConstants.kClawPivotID);
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
-    private final SysIdRoutine sysId = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.of(0.5).per(Second),         // Use default ramp rate (1 V/s)
-            Volts.of(1.5), // Reduce dynamic voltage to 4 to prevent brownout
-            null,          // Use default timeout (10 s)
-                                   // Log state with Phoenix SignalLogger class
-            state -> SignalLogger.writeString("clawPivotState", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> claw_pivot.setControl(m_sysIdControl.withOutput(volts)),
-            null,
-            this
-        )
-    );
 
     public Claw(){
         super();
@@ -55,8 +44,10 @@ public class Claw extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ClawConstants.kClawGearRatio;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(1)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
@@ -78,7 +69,7 @@ public class Claw extends SubsystemBase {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
 
-        claw_pivot.getConfigurator().setPosition(0);
+        claw_pivot.getConfigurator().setPosition(-0.095);
 
          BaseStatusSignal.setUpdateFrequencyForAll(250,
             claw_pivot.getPosition(),
@@ -117,17 +108,20 @@ public class Claw extends SubsystemBase {
         });
     }
 
-    public Command clawSysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return sysId.quasistatic(direction);
+    public boolean clawBroke() {
+        return !clawBeamBreak.get();
     }
-    public Command clawSysIdDynamic(SysIdRoutine.Direction direction) {
-        return sysId.dynamic(direction);
+
+    public BooleanSupplier clawBrokeSupplier() {
+        return clawBeamBreak::get;
     }
 
     @Override
     public void periodic(){
 
         SmartDashboard.putNumber("Claw Rotations", claw_pivot.getPosition().getValueAsDouble());
+        SmartDashboard.putBoolean("Claw Beam Break", clawBroke());
+
 
     }
 }
