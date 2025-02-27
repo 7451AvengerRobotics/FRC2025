@@ -20,3 +20,22 @@
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     return autoChooser1.get();
+
+
+
+    12 reef system 
+
+    blueReef.and(controller.()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    whiteReef.and(controller.L1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef1.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    greenReef.and(controller.L1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef2.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    redReef.and(controller.L1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    yellowReef.and(controller.L1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef4.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    blackReef.and(controller.L1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef5.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+
+
+    blueReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    whiteReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef1.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    greenReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef2.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    redReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    yellowReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef4.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+    blackReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef5.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
