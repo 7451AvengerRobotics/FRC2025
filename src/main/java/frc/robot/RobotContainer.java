@@ -262,7 +262,7 @@ public class RobotContainer {
     }));
 
     // Score or Suck
-    controller.L2().whileTrue(Commands.either(claw.setClawPower(0.2).until(claw::notClawBroke), 
+    controller.L2().onTrue(Commands.either(claw.setClawPower(0.2).until(claw::notClawBroke), 
                                               claw.setClawPower(0.4).until(claw::motorStall).andThen(claw.setClawPower(0.1))
                                                     .until(controller.L2().debounce(1)), claw::clawBroke));
     // Climber One
