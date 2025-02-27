@@ -82,6 +82,13 @@ public class Elevator extends SubsystemBase {
         elevator.setControl(elevatorRequest.withPosition(rotations).withSlot(0));
     }
 
+    public boolean endCommand() {
+        if (elevator.getVelocity(true).getValueAsDouble() == 0.0 && elevator.getPosition().getValueAsDouble() > 0.1) {
+            return true;
+        }
+        return false;
+    }
+
     public void reset() {
         if (getLimitSwitch()) {
             elevator.getConfigurator().setPosition(0);

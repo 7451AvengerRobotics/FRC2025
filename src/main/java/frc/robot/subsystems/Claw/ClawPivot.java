@@ -1,11 +1,6 @@
-package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.*;
-
-import java.util.function.BooleanSupplier;
+package frc.robot.subsystems.Claw;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -15,32 +10,22 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.RobotConstants.*;
+import frc.robot.Constants.RobotConstants.ClawConstants;
+import static edu.wpi.first.units.Units.*;
 
-public class Claw extends SubsystemBase {
+public class ClawPivot extends SubsystemBase {
 
-    private final SparkFlex claw;
-    private final RelativeEncoder clawEncoder;
-    private final DigitalInput clawBeamBreak = new DigitalInput(4);
     private final TalonFX claw_pivot = new TalonFX(ClawConstants.kClawPivotID);
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
 
-    public Claw(){
+    public ClawPivot() {
         super();
-
-        setName("Claw");
-
-        claw = new SparkFlex(ClawConstants.kClawID, MotorType.kBrushless);
-        clawEncoder = claw.getEncoder();
-
+        setName("clawPivot");
+        
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ClawConstants.kClawGearRatio;
@@ -75,31 +60,10 @@ public class Claw extends SubsystemBase {
             claw_pivot.getPosition(),
             claw_pivot.getVelocity(),
             claw_pivot.getMotorVoltage());
-
-
-        SignalLogger.start();
-    }
-
-    public void run(double power){
-        claw.set(power);
     }
 
     public void pivot(double angle){
         claw_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
-    }
-    
-    public double getEncoderPosition(){
-        return clawEncoder.getPosition();
-    }
-
-    public Command setClawPower(double power){
-        return runEnd(
-            () -> {
-                run(power);
-            }, 
-            () -> {
-                run(0);
-            });
     }
 
     public Command setClawPivotAngle(double angle) {
@@ -108,20 +72,9 @@ public class Claw extends SubsystemBase {
         });
     }
 
-    public boolean clawBroke() {
-        return !clawBeamBreak.get();
-    }
-
-    public BooleanSupplier clawBrokeSupplier() {
-        return clawBeamBreak::get;
-    }
-
     @Override
     public void periodic(){
-
         SmartDashboard.putNumber("Claw Rotations", claw_pivot.getPosition().getValueAsDouble());
-        SmartDashboard.putBoolean("Claw Beam Break", clawBroke());
-
-
     }
+    
 }

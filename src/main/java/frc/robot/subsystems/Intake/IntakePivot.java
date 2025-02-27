@@ -1,11 +1,6 @@
-package frc.robot.subsystems;
-
-import static edu.wpi.first.units.Units.*;
-
-import java.util.function.BooleanSupplier;
+package frc.robot.subsystems.Intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -16,24 +11,21 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import frc.robot.Constants.RobotConstants.IntakeConstants;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants.IntakeConstants;
 
-public class Intake extends SubsystemBase {
+import static edu.wpi.first.units.Units.*;
 
-    private final TalonFX intake = new TalonFX(IntakeConstants.kIntakeID);;
+public class IntakePivot extends SubsystemBase {
+
     private final TalonFX intake_pivot = new TalonFX(IntakeConstants.kIntakePivotID);;
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
-    private final DigitalInput intakebreak = new DigitalInput(0);
 
-    public Intake(){
+    public IntakePivot() {
         super();
-
-        setName("Intake");
+        setName("IntakePivot");
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
@@ -41,8 +33,8 @@ public class Intake extends SubsystemBase {
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(1)) // 5 (mechanism) rotations per second cruise
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.5)) // 5 (mechanism) rotations per second cruise
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(7)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;
@@ -69,44 +61,10 @@ public class Intake extends SubsystemBase {
             intake_pivot.getPosition(),
             intake_pivot.getVelocity(),
             intake_pivot.getMotorVoltage());
-
-
-        SignalLogger.start();
-    }
-
-    public void runIntake(double power){
-        intake.set(power);
-    }
-
-    public boolean getIntakeBreak() {
-        return !intakebreak.get();
-    }
-
-    public BooleanSupplier getIntakeBreakSupplier() {
-        return intakebreak::get;
     }
 
     public void pivotIntake(double angle){
         intake_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
-    }
-
-    public Command setintakePower(double power) {
-        return runEnd(
-            () -> {
-                this.runIntake(power);
-            }, 
-            () -> {
-                this.runIntake(0);
-            });
-    }
-
-    public Command dualIntake(double angle, double power) {
-       return run(
-        () -> {
-            this.runIntake(power);
-            this.setIntakePivotAngle(angle);
-        }
-       );
     }
 
     public Command setIntakePivotAngle(double angle) {
@@ -115,19 +73,23 @@ public class Intake extends SubsystemBase {
         });
     }
 
-    public boolean raiseIntake() {
-        if (intake.getVelocity(true).getValueAsDouble() < 200 && intake.getSupplyCurrent(true).getValueAsDouble() > 100) {
+
+    public boolean atPos() {
+        if (intake_pivot.getPosition().getValueAsDouble() >= 0.05 && intake_pivot.getPosition().getValueAsDouble() >= 0.11) {
             return true;
         }
         return false;
     }
 
-
-    @Override
-    public void periodic(){
-
-        SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
-        SmartDashboard.putBoolean("break", intakebreak.get());
-
+    public boolean endCommand() {
+        if (intake_pivot.getVelocity(true).getValueAsDouble() == 0.0 && intake_pivot.getPosition().getValueAsDouble() > 0.01) {
+            return true;
+        }
+        return false;
     }
+
+        @Override
+    public void periodic(){
+        SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
+    }   
 }
