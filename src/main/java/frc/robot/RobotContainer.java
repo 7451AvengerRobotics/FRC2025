@@ -8,6 +8,7 @@ import frc.robot.Constants.ButtonConstants;
 import frc.robot.Constants.FieldConstants.Processor;
 import frc.robot.Constants.FieldConstants.Reef;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.LEDCommands.LedStrobeCommand;
 import frc.robot.commands.LEDCommands.setLedColorCommand;
 import frc.robot.generated.TunerConstantsNew;
 import frc.robot.subsystems.Elevator;
@@ -30,14 +31,11 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.List;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -47,9 +45,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
-import frc.robot.subsystems.vision.VisionConstants.*;
-import frc.robot.subsystems.vision.VisionIO;
-import edu.wpi.first.wpilibj2.command.button.Trigger; 
+import frc.robot.subsystems.vision.VisionIO; 
 
 
 /**
@@ -142,7 +138,8 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
 
-    led.setDefaultCommand(new setLedColorCommand(led, 255, 0, 0));
+    led.setDefaultCommand(new setLedColorCommand(led, 255, 0, 0).until(intake::getIntakeBreak).andThen(new LedStrobeCommand(led, true)).until(claw::clawBroke)
+    .andThen(new LedStrobeCommand(led, false).withTimeout(1)).andThen(new setLedColorCommand(led, 0, 255, 0)).until(claw::notClawBroke));
 
   }
  
@@ -184,7 +181,7 @@ public class RobotContainer {
                 () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
-    //controller.PS().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    controller.PS().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // Reset gyro to 0° when B button is pressed
     controller
@@ -207,6 +204,11 @@ public class RobotContainer {
     redReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
     yellowReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef4.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
     blackReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef5.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+
+
+
+
+
     // Move Left
     controller.L1().whileTrue(Commands.runOnce(() -> {
       Pose2d currentPose = drive.getPose();
@@ -260,7 +262,9 @@ public class RobotContainer {
     }));
 
     // Score or Suck
-    controller.L2().whileTrue(Commands.either(claw.setClawPower(0.2), claw.setClawPower(0.4), claw::clawBroke));
+    controller.L2().whileTrue(Commands.either(claw.setClawPower(0.2).until(claw::notClawBroke), 
+                                              claw.setClawPower(0.4).until(claw::motorStall).andThen(claw.setClawPower(0.1))
+                                                    .until(controller.L2().debounce(1)), claw::clawBroke));
     // Climber One
     controller.circle().onTrue(Commands.parallel(intakePivot.setIntakePivotAngle(0.38), clawPivot.setClawPivotAngle(-0.05)));
     // L1 - L4
@@ -283,7 +287,7 @@ public class RobotContainer {
             claw.setClawPower(0.3),
             intakePivot.setIntakePivotAngle(
             .2))
-        ).until(claw::clawBroke).andThen(Commands.parallel(intakePivot.setIntakePivotAngle(0))));
+        ).until(claw::clawBroke).andThen(Commands.parallel(intakePivot.setIntakePivotAngle(0), new setLedColorCommand(led, 0, 255, 0))));
     // Intake Trough
     intakeTrough.onTrue(new ParallelCommandGroup(intakePivot.setIntakePivotAngle(0.38), intake.setintakePower(0.7)).until(intake::getIntakeBreak));
     // Other intake test dont't delete
