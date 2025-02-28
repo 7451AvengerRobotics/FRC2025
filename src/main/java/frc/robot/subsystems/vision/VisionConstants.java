@@ -28,17 +28,17 @@ public class VisionConstants {
   // Camera names, must match names configured on coprocessor
   public static String limelight1Camera = "LimelightLeft";
   public static String limelight2Camera = "Limelight";
-  public static String camera0Name = "FontLeft";
+  public static String camera0Name = "FrontLeft";
   public static String camera1Name = "FrontRight";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
   public static Transform3d limelight3Transform3d =
     new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(5.516), Units.inchesToMeters(5.887), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(10)));
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(170)));
   public static Transform3d limelight2Transform3d =
     new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(-10)));
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(190)));
   public static Transform3d frontRightTransform3d =
     new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(-30)));

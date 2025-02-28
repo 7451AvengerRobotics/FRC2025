@@ -43,15 +43,15 @@ public class RobotConstants {
         public static final double elevatorkG = 0.512;  
     }
     public static class ClimberConstants{
-        public static final int kClimberID = 42;
+        public static final int kClimberID = 9;
         public static final double kClimberGearRatio = 312.5;
-        public static final double climberkS = 0.11518; // Add 0.25 V output to overcome static friction
-        public static final double climberkV = 34.976; // A velocity target of 1 rps results in 0.12 V output
-        public static final double climberkA = 0.35824; // An acceleration of 1 rps/s requires 0.01 V output
-        public static final double climberkP = 35.515; // A position error of 0.2 rotations results in 12 V output
+        public static final double climberkS = 0.2; // Add 0.25 V output to overcome static friction
+        public static final double climberkV = 30; // A velocity target of 1 rps results in 0.12 V output
+        public static final double climberkA = 0; // An acceleration of 1 rps/s requires 0.01 V output
+        public static final double climberkP = 100; // A position error of 0.2 rotations results in 12 V output
         public static final double climberkI = 0; // No output for integrated error
         public static final double climberkD = 10.897; 
-        public static final double climberkG = 0.091684; 
+        public static final double climberkG = 0.1; 
 
     }
 

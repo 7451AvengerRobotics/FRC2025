@@ -24,13 +24,13 @@ public class TunerConstantsNew {
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
         .withKP(101.53).withKI(0).withKD(1.0063)
-        .withKS(0.22464).withKV(0.10).withKA(0)
+        .withKS(0.22464).withKV(0.10).withKA(0.0050431)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
         .withKP(0.1).withKI(0).withKD(0)
-        .withKS(0.22827).withKV(0.68801);
+        .withKS(0.22895).withKV(0.66881);
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors
@@ -60,7 +60,7 @@ public class TunerConstantsNew {
             new CurrentLimitsConfigs()
                 // Swerve azimuth does not require much torque output, so we can set a relatively low
                 // stator current limit to help avoid brownouts without impacting performance.
-                .withStatorCurrentLimit(Amps.of(60))
+                .withStatorCurrentLimit(Amps.of(100))
                 .withStatorCurrentLimitEnable(true)
         );
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
@@ -81,7 +81,7 @@ public class TunerConstantsNew {
 
     private static final double kDriveGearRatio = 5.357142857142857;
     private static final double kSteerGearRatio = 18.75;
-    private static final Distance kWheelRadius = Inches.of(1.907);
+    private static final Distance kWheelRadius = Inches.of(1.902);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

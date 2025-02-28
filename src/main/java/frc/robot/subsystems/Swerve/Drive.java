@@ -128,7 +128,7 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(1.5427, 0.0, 0.0), new PIDConstants(2.2224, 0.0, 0.0)),
+            new PIDConstants(1, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
         PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -222,7 +222,7 @@ public class Drive extends SubsystemBase {
 
   public Command driveToPose(Pose2d pose) {
     PathConstraints constraints = new PathConstraints(
-      3,
+      15,
       1.5, 
       Units.degreesToRadians(300), 
       Units.degreesToRadians(150));   

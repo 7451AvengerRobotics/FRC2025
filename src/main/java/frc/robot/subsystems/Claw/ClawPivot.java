@@ -54,7 +54,7 @@ public class ClawPivot extends SubsystemBase {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
 
-        claw_pivot.getConfigurator().setPosition(-0.095);
+        claw_pivot.getConfigurator().setPosition(-0.061279296875);
 
          BaseStatusSignal.setUpdateFrequencyForAll(250,
             claw_pivot.getPosition(),
@@ -70,6 +70,14 @@ public class ClawPivot extends SubsystemBase {
         return run(() -> {
             pivot(angle);
         });
+    }
+
+    public double getClawPivotPosition() {
+        return claw_pivot.getPosition().getValueAsDouble();
+    }
+
+    public boolean getClawVelo() {
+        return (getClawPivotPosition() > 0.03 && claw_pivot.getVelocity(true ).getValueAsDouble() == 0);
     }
 
     @Override

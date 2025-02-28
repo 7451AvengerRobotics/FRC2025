@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.RobotConstants.ClimberConstants;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,11 +32,14 @@ public class Climber extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ClimberConstants.kClimberGearRatio;
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5)) // 5 (mechanism) rotations per second cruise
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
-            .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.32)) // 5 (mechanism) rotations per second cruise
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(0.1)) // Take approximately 0.5 seconds to reach max vel
+            .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(0.5));
+         // Take approximately 0.1 seconds to reach max accel 
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         Slot0Configs slot0 = cfg.Slot0;
         slot0.kS = ClimberConstants.climberkS;
@@ -88,6 +92,20 @@ public class Climber extends SubsystemBase {
         return run(() -> {
             this.setAngle(angle);
         });
+    }
+
+    public boolean endClimbCommand() {
+        if (climber.getVelocity(true).getValueAsDouble() == 0.0 && climber.getPosition().getValueAsDouble() < 0.03) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean endClimbSeq() {
+        if ((climber.getPosition().getValueAsDouble() > 0.23 && climber.getPosition().getValueAsDouble() < 0.26)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
