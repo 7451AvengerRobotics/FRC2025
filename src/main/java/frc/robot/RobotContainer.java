@@ -5,8 +5,6 @@
 package frc.robot;
 
 import frc.robot.Constants.ButtonConstants;
-import frc.robot.Constants.FieldConstants.Processor;
-import frc.robot.Constants.FieldConstants.Reef;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.elevateCommand;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
@@ -25,29 +23,18 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.GamepadAxisButton;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import java.util.List;
-
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
 import frc.robot.subsystems.vision.VisionIO; 
 
 
@@ -64,8 +51,10 @@ public class RobotContainer {
   //private final SendableChooser<Command> autoChooser;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
   private final Joystick buttonPannel = new Joystick(0);
+  private final AutoFactory autoFactory;
+  private final AutoChooser autoChooser;
 
-  private final LoggedDashboardChooser<Command> autoChooser;
+
 
   // Subsytems
   private final Intake intake = new Intake();
@@ -129,18 +118,20 @@ public class RobotContainer {
           // Replayed robot, disable IO implementations
           // (Use same number of dummy implementations as the real robot)
             vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-              break;
+              break;    
     }
 
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-    // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    // Configure the trigger bindings
     configureBindings();
+
+    autoFactory = new AutoFactory(
+      drive::getPose, // A function that returns the current robot pose
+      drive::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
+      drive::followTrajectory, // The drive subsystem trajectory follower 
+      true, // If alliance flipping should be enabled 
+      drive // The drive subsystem
+    );
+
+    autoChooser = new AutoChooser();
 
     led.setDefaultCommand(new setLedColorCommand(led, 255, 0, 0).until(intake::getIntakeBreak).andThen(new LedStrobeCommand(led, true)).until(claw::clawBroke)
     .andThen(new LedStrobeCommand(led, false).withTimeout(1)).andThen(new setLedColorCommand(led, 0, 255, 0)).until(claw::notClawBroke));
@@ -197,73 +188,6 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                     drive)
                 .ignoringDisable(true));
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-
-    //Drive To Pose Commands
-    processor.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Processor.centerFace.plus(new Transform2d(new Translation2d(1, 0), new Rotation2d(0)))))
-                                                                .andThen(clawPivot.setClawPivotAngle(0.04)));
-    blueReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    whiteReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef1.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    greenReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef2.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    redReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    yellowReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef4.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-    blackReef.whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef5.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
-
-
-
-
-
-    // Move Left
-    controller.L1().whileTrue(Commands.runOnce(() -> {
-      Pose2d currentPose = drive.getPose();
-      
-      // The rotation component in these poses represents the direction of travel
-      Pose2d startPos = new Pose2d(currentPose.getTranslation(), new Rotation2d());
-      Pose2d endPos = new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, 0.1)), new Rotation2d());
-
-      //List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPos, endPos); 
-      List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPos, new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, 0.05)), new Rotation2d()), endPos);
-      PathPlannerPath path = new PathPlannerPath(
-        waypoints, 
-        new PathConstraints(
-          2, 1, 
-          Units.degreesToRadians(360), Units.degreesToRadians(90)
-        ),
-        null, // Ideal starting state can be null for on-the-fly paths
-        new GoalEndState(0.0, currentPose.getRotation())
-      );
-
-      // Prevent this path from being flipped on the red alliance, since the given positions are already correct
-      path.preventFlipping = true;
-
-      AutoBuilder.followPath(path).schedule(); 
-    }));
-
-    //Move Right
-    controller.R1().whileTrue(Commands.runOnce(() -> {
-      Pose2d currentPose = drive.getPose();
-      
-      // The rotation component in these poses represents the direction of travel
-      Pose2d startPos = new Pose2d(currentPose.getTranslation(), new Rotation2d());
-      Pose2d endPos = new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, -0.1)), new Rotation2d());
-
-      //List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPos, endPos); 
-      List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPos, new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, 0.05)), new Rotation2d()), endPos);
-      PathPlannerPath path = new PathPlannerPath(
-        waypoints, 
-        new PathConstraints(
-          2, 1, 
-          Units.degreesToRadians(360), Units.degreesToRadians(90)
-        ),
-        null, // Ideal starting state can be null for on-the-fly paths
-        new GoalEndState(0.0, currentPose.getRotation())
-      );
-
-      // Prevent this path from being flipped on the red alliance, since the given positions are already correct
-      path.preventFlipping = true;
-
-      AutoBuilder.followPath(path).schedule(); 
-    }));
 
     // Score or Suck
     controller.L2().onTrue(Commands.either(claw.setClawPower(0.2).until(claw::notClawBroke), 
@@ -310,7 +234,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return drive.followPathCommand("Example Path");
-    return autoChooser.get();
+    return autoChooser.selectedCommandScheduler();
   }
 
   public boolean axis1ThresholdGreatererThanPoint5(){

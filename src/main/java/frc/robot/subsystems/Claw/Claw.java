@@ -1,7 +1,5 @@
 package frc.robot.subsystems.Claw;
 
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.jni.REVLibJNI;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DigitalInput;
