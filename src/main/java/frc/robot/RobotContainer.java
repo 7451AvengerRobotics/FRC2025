@@ -133,98 +133,196 @@ public class RobotContainer {
 
     autoChooser = new AutoChooser();
 
-    led.setDefaultCommand(new setLedColorCommand(led, 255, 0, 0).until(intake::getIntakeBreak).andThen(new LedStrobeCommand(led, true)).until(claw::clawBroke)
-    .andThen(new LedStrobeCommand(led, false).withTimeout(1)).andThen(new setLedColorCommand(led, 0, 255, 0)).until(claw::notClawBroke));
-
+    led.setDefaultCommand(
+      new setLedColorCommand(led, 255, 0, 0)
+      .until(
+        intake::getIntakeBreak
+      ).andThen(
+        new LedStrobeCommand(led, true)
+      ).until(
+        claw::clawBroke
+      )
+      .andThen(
+        new LedStrobeCommand(led, false).withTimeout(1)
+      ).andThen(
+        new setLedColorCommand(led, 0, 255, 0)
+      ).until(
+        claw::notClawBroke
+      )
+    );
   }
  
   private void configureBindings() {
 
-      JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
-      JoystickButton intakeTrough = new JoystickButton(buttonPannel, ButtonConstants.intakeTrough);
-      JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
-      JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
-      JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
-      JoystickButton algae2 = new JoystickButton(buttonPannel, ButtonConstants.algae2);
-      JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
-      JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
-      JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
-      JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
-      JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
-      JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
-      JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
-      GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdGreatererThanPoint5);
-      GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
+    JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
+    JoystickButton intakeTrough = new JoystickButton(buttonPannel, ButtonConstants.intakeTrough);
+    JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
+    JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
+    JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
+    JoystickButton algae2 = new JoystickButton(buttonPannel, ButtonConstants.algae2);
+    JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
+    JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
+    JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
+    JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
+    JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
+    JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
+    JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
+    GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdGreatererThanPoint5);
+    GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
 
-      clawPivot.setDefaultCommand(clawPivot.setClawPivotAngle(0.03));
+    clawPivot.setDefaultCommand(
+      clawPivot.setClawPivotAngle(0.03)
+    );
 
-        drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+    drive.setDefaultCommand(
+      DriveCommands.joystickDrive(
+        drive,
+        () -> -controller.getLeftY(),
+        () -> -controller.getLeftX(),
+        () -> -controller.getRightX()
+      )
+    );
+      
+      // Switch to X pattern when X button is pressed
+    controller.PS().onTrue(
+      Commands.runOnce(
+        drive::stopWithX,
+        drive
+      )
+    );
 
-    // Lock to 0° when A button is held
-    // controller
-    //     .triangle()
-    //     .whileTrue(
-    //         DriveCommands.joystickDriveAtAngle(
-    //             drive,
-    //             () -> controller.getLeftY(),
-    //             () -> controller.getLeftX(),
-    //             () -> new Rotation2d()));
+      // Reset gyro to 0° when B button is pressed
+    controller.square().onTrue(
+      Commands.runOnce(
+        () -> drive.setPose(
+          new Pose2d(
+            drive.getPose().getTranslation(), 
+            new Rotation2d()
+          )
+        ),
+          drive
+        )
+      .ignoringDisable(true)
+    );
 
-    // Switch to X pattern when X button is pressed
-    controller.PS().onTrue(Commands.runOnce(drive::stopWithX, drive));
+      // Score or Suck
+    controller.L2().onTrue(
+      Commands.either(
+        claw.setClawPower(0.2)
+        .until(
+          claw::notClawBroke
+        ), 
+        claw.setClawPower(0.4)
+        .until(
+          claw::motorStall
+          ).andThen(
+            claw.setClawPower(0.1)
+          ), 
+        claw::clawBroke
+      )
+    );
+      // Climber One
+    controller.povDown().onTrue(
+      Commands.parallel(
+        intakePivot.setIntakePivotAngle(0.38), 
+        clawPivot.setClawPivotAngle(-0.03), 
+        climb.setClimberAngle(-0.25)
+      )
+    );
+    controller.povUp().whileTrue(
+      Commands.parallel(
+        clawPivot.setClawPivotAngle(-0.03), 
+        climb.setClimberPower(0.2)
+          .until(climb::endClimbSeq)
+      )
+    );
 
-    // Reset gyro to 0° when B button is pressed
-    controller
-        .square()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
+      // L1 - L4
+    L1.whileTrue(
+      Commands.parallel(
+        intakePivot.setIntakePivotAngle(0.15)
+        .until(
+          intakePivot::endCommand
+          ).andThen(
+            intake.setintakePower(-0.23)
+          )
+      )
+    );
 
-    // Score or Suck
-    controller.L2().onTrue(Commands.either(claw.setClawPower(0.2).until(claw::notClawBroke), 
-                                              claw.setClawPower(0.4).until(claw::motorStall).andThen(claw.setClawPower(0.1))
-                                                    .until(controller.L2().debounce(1)), claw::clawBroke));
-    // Climber One
-   controller.povDown().onTrue(Commands.parallel(intakePivot.setIntakePivotAngle(0.38), clawPivot.setClawPivotAngle(-0.03), climb.setClimberAngle(-0.25)));
-   controller.povUp().whileTrue(Commands.parallel(clawPivot.setClawPivotAngle(-0.03), climb.setClimberPower(0.2).until(climb::endClimbSeq)));
-    // L1 - L4
-    L1.whileTrue(Commands.parallel(intakePivot.setIntakePivotAngle(0.15).until(intakePivot::endCommand).andThen(intake.setintakePower(-0.23))));
-    L2.onTrue((elevator.setElevatorPosition(2.1)));
-    L3.onTrue((elevator.setElevatorPosition(3.5)));
-    L4.onTrue(elevator.setElevatorPosition(5.58).until(elevator::endCommand).andThen(clawPivot.setClawPivotAngle(0.013)));
-    //Reset
-    reset.onTrue(climb.setClimberAngle(0).until(climb::endClimbCommand).andThen(Commands.parallel(intakePivot.setIntakePivotAngle(0),
-                                          elevator.setElevatorPosition(0), 
-                                          clawPivot.setClawPivotAngle(0.03))));
-    // Intake All
-    controller.R2().onTrue(Commands.parallel(intake.setintakePower(1), 
-    intakePivot.setIntakePivotAngle(0.38)).until(intake::getIntakeBreak)
-    .andThen(
+    L2.onTrue(
+      (
+        elevator.setElevatorPosition(2.1)
+        .onlyIf(
+          clawPivot::clawClear
+        )
+      )
+    );
+
+    L3.onTrue(
+      (
+        elevator.setElevatorPosition(3.5)
+        .onlyIf(
+          clawPivot::clawClear
+        )
+      )
+    );
+
+    L4.onTrue(
+      elevator.setElevatorPosition(5.58)
+      .until(
+        elevator::endCommand
+      ).onlyIf(
+        clawPivot::clawClear
+      )
+      .andThen(
+        clawPivot.setClawPivotAngle(0.013)
+      )
+    );
+      //Reset
+    reset.onTrue(
+      climb.setClimberAngle(0)
+      .until(
+        climb::endClimbCommand
+      ).andThen(
+        Commands.parallel(
+          intakePivot.setIntakePivotAngle(0),
+          elevator.setElevatorPosition(0), 
+          clawPivot.setClawPivotAngle(0.03)
+        )
+      )
+    );
+
+      // Intake All
+    controller.R2().onTrue(
+      Commands.parallel(
+        intake.setintakePower(1),
+        intakePivot.setIntakePivotAngle(0.38))
+      .until(intake::getIntakeBreak)
+      .andThen(
+        intakePivot.setIntakePivotAngle(.2)
+      ).until(elevator::elevatorReset)
+      .andThen(
         Commands.parallel(
             intake.setintakePower(0.3),
             index.setIndexPower(1),
             claw.setClawPower(0.1),
-            clawPivot.setClawPivotAngle(-0.055),
-            intakePivot.setIntakePivotAngle(
-            .2))
-        ).until(claw::clawBroke).andThen(Commands.parallel(intakePivot.setIntakePivotAngle(0), clawPivot.setClawPivotAngle(0.03))));
-    // Intake Trough
-    intakeTrough.onTrue(new ParallelCommandGroup(intakePivot.setIntakePivotAngle(0.38), intake.setintakePower(0.7)).until(intake::getIntakeBreak));
-    // Other intake test dont't delete
-    // intakeTrough.whileTrue(intakePivot.setIntakePivotAngle(0.15).withTimeout(1).andThen(intake.setintakePower(-0.2)));
-
-    controller.options().onTrue(new elevateCommand(elevator, clawPivot, 2.1));
-
-}
+            clawPivot.setClawPivotAngle(-0.055))
+          )
+      .andThen(
+        Commands.parallel(
+          intakePivot.setIntakePivotAngle(0),
+          clawPivot.setClawPivotAngle(0.03)
+        )
+      )
+    );
+      // Intake Trough
+    intakeTrough.onTrue(
+      Commands.parallel(
+        intakePivot.setIntakePivotAngle(0.38),
+        intake.setintakePower(0.7))
+      .until(intake::getIntakeBreak)
+      );
+  }
 
 
   /**

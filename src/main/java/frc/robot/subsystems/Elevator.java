@@ -108,6 +108,10 @@ public class Elevator extends SubsystemBase {
         return !limitSwitch.get();
     }
 
+    public boolean elevatorReset() {
+        return (elevator.getPosition().getValueAsDouble() < 0.1) && elevator.getVelocity(true).getValueAsDouble() == 0.0;
+    }
+
     @Override
     public void periodic(){
 
