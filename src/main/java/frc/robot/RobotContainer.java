@@ -6,7 +6,6 @@ package frc.robot;
 
 import frc.robot.Constants.ButtonConstants;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.elevateCommand;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
 import frc.robot.commands.LEDCommands.setLedColorCommand;
 import frc.robot.generated.TunerConstantsNew;
@@ -27,14 +26,21 @@ import frc.robot.util.GamepadAxisButton;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+
+import org.littletonrobotics.junction.Logger;
+
 import com.pathplanner.lib.auto.NamedCommands;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
 import frc.robot.subsystems.vision.VisionIO; 
 
 
@@ -65,7 +71,6 @@ public class RobotContainer {
   private final Index index = new Index();
   private final LedHandler led = new LedHandler();
   private final Climber climb = new Climber();
-
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -124,14 +129,23 @@ public class RobotContainer {
     configureBindings();
 
     autoFactory = new AutoFactory(
-      drive::getPose, // A function that returns the current robot pose
-      drive::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
-      drive::followTrajectory, // The drive subsystem trajectory follower 
-      true, // If alliance flipping should be enabled 
-      drive // The drive subsystem
-    );
+                drive::getPose,
+                drive::resetOdometry,
+                drive::followTrajectory,
+                true,
+                drive
+              );
 
     autoChooser = new AutoChooser();
+
+        // Add options to the chooser
+    autoChooser.addRoutine("Example Routine", this::initRoutine);
+
+    SmartDashboard.putData(autoChooser);
+
+    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+
+
 
     led.setDefaultCommand(
       new setLedColorCommand(led, 255, 0, 0)
@@ -332,7 +346,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return drive.followPathCommand("Example Path");
-    return autoChooser.selectedCommandScheduler();
+    return null;
   }
 
   public boolean axis1ThresholdGreatererThanPoint5(){
@@ -341,5 +355,19 @@ public class RobotContainer {
 
   public boolean axis0ThresholdGreatererThanPoint5(){
     return Math.abs(buttonPannel.getRawAxis(0)) > .5;
+  }
+
+  private AutoRoutine initRoutine() {
+    final AutoRoutine routine = autoFactory.newRoutine("TestRoutine");
+    final AutoTrajectory intialPath = routine.trajectory("InitPath");
+
+
+    routine.active().onTrue(
+      Commands.sequence(
+          intialPath.resetOdometry(),
+          intialPath.cmd()
+        )
+      );
+    return routine;
   }
 }
