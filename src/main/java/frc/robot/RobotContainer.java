@@ -130,7 +130,7 @@ public class RobotContainer {
 
     autoFactory = new AutoFactory(
                 drive::getPose,
-                drive::resetOdometry,
+                drive::setPose,
                 drive::followTrajectory,
                 true,
                 drive
@@ -141,7 +141,7 @@ public class RobotContainer {
         // Add options to the chooser
     autoChooser.addRoutine("Example Routine", this::initRoutine);
 
-    SmartDashboard.putData(autoChooser);
+    SmartDashboard.putData("Chooser", autoChooser);
 
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
