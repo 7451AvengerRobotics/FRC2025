@@ -5,6 +5,8 @@
 package frc.robot;
 
 import frc.robot.Constants.ButtonConstants;
+import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.FieldConstants.Processor;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
 import frc.robot.commands.LEDCommands.setLedColorCommand;
@@ -22,13 +24,18 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.GamepadAxisButton;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -205,6 +212,13 @@ public class RobotContainer {
       )
     );
 
+    //blueReef.whileTrue(Commands.parallel(drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0)))))));
+    blueReef.whileTrue(
+      Commands.parallel(
+        drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))), 
+        elevator.setElevatorPosition(2.1)
+      )
+    );
       // Reset gyro to 0° when B button is pressed
     controller.square().onTrue(
       Commands.runOnce(
@@ -347,6 +361,12 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // return drive.followPathCommand("Example Path");
     return null;
+  }
+
+
+
+  public Command scoreProcessor() {
+    return drive.driveToPose(AllianceFlipUtil.apply(drive.getClosestReef()));
   }
 
   public boolean axis1ThresholdGreatererThanPoint5(){

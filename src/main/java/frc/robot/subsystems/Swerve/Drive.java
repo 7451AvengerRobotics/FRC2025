@@ -26,12 +26,18 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
+import frc.robot.subsystems.Swerve.Controller.HolonomicDriveWithPIDController;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstantsNew;
 import frc.robot.util.AllianceFlipUtil;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
@@ -52,6 +58,10 @@ public class Drive extends SubsystemBase {
   private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
+
+  private boolean holonomicControllerActive = false;
+  private Pose2d holonomicPoseTarget = new Pose2d();
+  private final HolonomicDriveWithPIDController holonomicDriveWithPIDController;
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -83,6 +93,13 @@ public class Drive extends SubsystemBase {
     modules[1] = new Module(frModuleIO, 1, TunerConstantsNew.FrontRight);
     modules[2] = new Module(blModuleIO, 2, TunerConstantsNew.BackLeft);
     modules[3] = new Module(brModuleIO, 3, TunerConstantsNew.BackRight);
+
+    this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
+      new PIDController(4, 0, 0),
+      new PIDController(4, 0, 0),
+      headingController,
+      new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
+  );
 
     SmartDashboard.putData("Field", m_field);
 
@@ -318,6 +335,45 @@ public class Drive extends SubsystemBase {
         //Changed from driveFieldRelative to runVelocity
         runVelocity(speeds);
     }
+  
+      public Command driveToPose(Pose2d pose) {
+        return Commands.sequence(
+                runOnce(() -> {
+                    holonomicControllerActive = true;
+                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
+                }),
+                run(() -> {
+                    this.holonomicPoseTarget = pose;
+                    runVelocity(holonomicDriveWithPIDController.calculate(getPose(), holonomicPoseTarget));
+                }).until(holonomicDriveWithPIDController::atReference),
+                runOnce(this::stop)
+        ).finallyDo(() -> holonomicControllerActive = false);
+    }
+    
+    public double getDistance(Pose2d target) {
+        Pose2d currentPose = getPose();
+        double distance = Math.sqrt(Math.pow(currentPose.getX() - target.getX(), 2) + Math.pow(currentPose.getY() - target.getY(), 2));
+        return distance;
+    }
+
+    public Pose2d getClosestReef() {
+      Pose2d closestReef = FieldConstants.Reef.reef0;
+      for (Pose2d reef : FieldConstants.Reef.reefs) {
+        if (getDistance(reef) < getDistance(closestReef)) {
+          closestReef = reef;
+        }
+      }
+      return closestReef;
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+      return kinematics.toChassisSpeeds(
+              modules[0].getState(),
+              modules[1].getState(),
+              modules[2].getState(),
+              modules[3].getState()
+      );
+  }
 
     public void resetOdometry(Pose2d pose) {
       poseEstimator.resetPosition(
