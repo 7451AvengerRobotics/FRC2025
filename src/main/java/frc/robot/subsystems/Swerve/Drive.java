@@ -3,6 +3,13 @@ package frc.robot.subsystems.Swerve;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
@@ -13,6 +20,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,26 +29,49 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
 import frc.robot.subsystems.Swerve.Controller.HolonomicDriveWithPIDController;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstantsNew;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.LocalADStarAK;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
+
+  private static final double ROBOT_MASS_KG = 56.7;
+  private static final double ROBOT_MOI = 3.00241;
+  private static final double WHEEL_COF = 1.0;
+  private static final RobotConfig PP_CONFIG =
+      new RobotConfig(
+          ROBOT_MASS_KG,
+          ROBOT_MOI,
+          new ModuleConfig(
+              TunerConstantsNew.FrontLeft.WheelRadius,
+              TunerConstantsNew.kSpeedAt12Volts.in(MetersPerSecond),
+              WHEEL_COF,
+              DCMotor.getKrakenX60Foc(1)
+                  .withReduction(TunerConstantsNew.FrontLeft.DriveMotorGearRatio),
+              TunerConstantsNew.FrontLeft.SlipCurrent,
+              1),
+          getModuleTranslations());
   // TunerConstantsNew doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstantsNew.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
@@ -55,13 +86,15 @@ public class Drive extends SubsystemBase {
 
   private final Field2d m_field = new Field2d();
 
-  private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
-  private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
+  private final PIDController xController = new PIDController(4.0, 0.0, 0.0);
+  private final PIDController yController = new PIDController(4.0, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(4, 0.0, 0.0);
 
   private boolean holonomicControllerActive = false;
   private Pose2d holonomicPoseTarget = new Pose2d();
   private final HolonomicDriveWithPIDController holonomicDriveWithPIDController;
+  private final SysIdRoutine sysId;
+
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -95,8 +128,8 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, 3, TunerConstantsNew.BackRight);
 
     this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-      new PIDController(4, 0, 0),
-      new PIDController(4, 0, 0),
+      new PIDController(3.5, 0, 0),
+      new PIDController(3.5, 0, 0),
       headingController,
       new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
   );
@@ -110,6 +143,38 @@ public class Drive extends SubsystemBase {
     PhoenixOdometryThread.getInstance().start();
 
     headingController.enableContinuousInput(-Math.PI, Math.PI);
+
+
+    AutoBuilder.configure(
+        this::getPose,
+        this::setPose,
+        this::getChassisSpeeds,
+        this::runVelocity,
+        new PPHolonomicDriveController(
+            new PIDConstants(1, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
+        PP_CONFIG,
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        this);
+    Pathfinding.setPathfinder(new LocalADStarAK());
+    PathPlannerLogging.setLogActivePathCallback(
+        (activePath) -> {
+          Logger.recordOutput(
+              "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
+        });
+    PathPlannerLogging.setLogTargetPoseCallback(
+        (targetPose) -> {
+          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+        });
+
+    sysId =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
   @Override
@@ -226,7 +291,17 @@ public class Drive extends SubsystemBase {
     kinematics.resetHeadings(headings);
     stop();
   }
-  
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(sysId.quasistatic(direction));
+  }
+
+  /** Returns a command to run a dynamic test in the specified direction. */
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
+  }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
@@ -349,6 +424,22 @@ public class Drive extends SubsystemBase {
                 runOnce(this::stop)
         ).finallyDo(() -> holonomicControllerActive = false);
     }
+
+    public Command driveRight() {
+      return Commands.runOnce(() -> {
+        Pose2d currentPose = getPose();
+        Pose2d endPos = new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, -0.1)), new Rotation2d());
+        driveToPose(endPos);
+        });
+    }
+
+    public Command driveLeft() {
+      return Commands.runOnce(() -> {
+        Pose2d currentPose = getPose();
+        Pose2d endPos = new Pose2d(currentPose.getTranslation().plus(new Translation2d(0, 0.1)), new Rotation2d());
+        driveToPose(endPos);
+        });
+    }
     
     public double getDistance(Pose2d target) {
         Pose2d currentPose = getPose();
@@ -365,6 +456,38 @@ public class Drive extends SubsystemBase {
       }
       return closestReef;
     }
+
+    public Command driveToClosestReefScoringFace() {
+       final List<Pose2d> reefCenterPosesList = Arrays.asList(FieldConstants.Reef.reefs);
+
+       return Commands.defer(
+        () -> {
+          final Pose2d currentPose = getPose();
+          final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
+
+          return driveToPose(nearestCoralSide);
+        },
+        Set.of(this)
+       );
+        
+    }
+
+
+    public Command driveToClosestReefScoringFaceWithTranslate(Transform2d transform2d) {
+      final List<Pose2d> reefCenterPosesList = Arrays.asList(FieldConstants.Reef.reefs);
+
+      return Commands.defer(
+       () -> {
+         final Pose2d currentPose = getPose();
+         final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
+         Pose2d drivePose = nearestCoralSide.plus(transform2d);
+
+         return driveToPose(drivePose);
+       },
+       Set.of(this)
+      );
+       
+   }
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
       return kinematics.toChassisSpeeds(

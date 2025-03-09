@@ -6,7 +6,6 @@ package frc.robot;
 
 import frc.robot.Constants.ButtonConstants;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.FieldConstants.Processor;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
 import frc.robot.commands.LEDCommands.setLedColorCommand;
@@ -31,17 +30,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-
-import org.littletonrobotics.junction.Logger;
-
 import com.pathplanner.lib.auto.NamedCommands;
 
 import choreo.auto.AutoChooser;
@@ -61,7 +54,6 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Vision vision;
   private final Drive drive;
-  //private final SendableChooser<Command> autoChooser;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
   private final Joystick buttonPannel = new Joystick(0);
   private final AutoFactory autoFactory;
@@ -101,6 +93,7 @@ public class RobotContainer {
                 new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
                 new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
                 new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d));
+                //new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d));
         break;
 
       case SIM:
@@ -150,10 +143,6 @@ public class RobotContainer {
 
     SmartDashboard.putData("Chooser", autoChooser);
 
-    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-
-
-
     led.setDefaultCommand(
       new setLedColorCommand(led, 255, 0, 0)
       .until(
@@ -188,8 +177,9 @@ public class RobotContainer {
     JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
     JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
     JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
-    GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdGreatererThanPoint5);
-    GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
+    GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdLessThanPoint5);
+    GamepadAxisButton algae1 = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
+    GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdLessThanPoint5);
 
     clawPivot.setDefaultCommand(
       clawPivot.setClawPivotAngle(0.03)
@@ -212,14 +202,67 @@ public class RobotContainer {
       )
     );
 
-    //blueReef.whileTrue(Commands.parallel(drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0)))))));
-    blueReef.whileTrue(
-      Commands.parallel(
-        drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))), 
-        elevator.setElevatorPosition(2.1)
-      )
-    );
-      // Reset gyro to 0° when B button is pressed
+    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.058));
+
+
+    // blackReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // whiteReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef1.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
+    //   )
+    // );
+    
+    // redReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef5.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // yellowReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef2.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // blueReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef3.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+   
+    // greenReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef4.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    //Drive Commands
+    controller.R1().whileTrue(
+      drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,0.18), new Rotation2d(0))
+    ));
+
+    controller.L1().whileTrue(
+      drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,-0.18), new Rotation2d(0))
+    ));
+ 
+    controller.touchpad().whileTrue(
+      drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.48,0), new Rotation2d(0))
+    ));
+
+    processor.whileTrue(Commands.parallel(
+      drive.driveToPose(FieldConstants.Processor.centerFace.plus(new Transform2d(new Translation2d(0.58,0), new Rotation2d(0))))
+    ));
+
+    intakeAlgae.whileTrue(claw.setClawPower(0.5));
+
+
+
+    // Reset gyro to 0° when B button is pressed
     controller.square().onTrue(
       Commands.runOnce(
         () -> drive.setPose(
@@ -233,34 +276,23 @@ public class RobotContainer {
       .ignoringDisable(true)
     );
 
+    
+
       // Score or Suck
-    controller.L2().onTrue(
-      Commands.either(
-        claw.setClawPower(0.2)
-        .until(
-          claw::notClawBroke
-        ), 
-        claw.setClawPower(0.4)
-        .until(
-          claw::motorStall
-          ).andThen(
-            claw.setClawPower(0.1)
-          ), 
-        claw::clawBroke
-      )
-    );
+    controller.L2().onTrue((claw.setClawPower(0.2).until(claw::notClawBroke))); 
+
       // Climber One
     controller.povDown().onTrue(
       Commands.parallel(
-        intakePivot.setIntakePivotAngle(0.38), 
+        intakePivot.setIntakePivotAngle(0.36), 
         clawPivot.setClawPivotAngle(-0.03), 
-        climb.setClimberAngle(-0.25)
+        climb.setClimberAngle(-0.23)
       )
     );
     controller.povUp().whileTrue(
       Commands.parallel(
         clawPivot.setClawPivotAngle(-0.03), 
-        climb.setClimberPower(0.2)
+        climb.setClimberPower(0.37)
           .until(climb::endClimbSeq)
       )
     );
@@ -279,16 +311,19 @@ public class RobotContainer {
 
     L2.onTrue(
       (
-        elevator.setElevatorPosition(2.1)
+        elevator.setElevatorPosition(2)
         .onlyIf(
           clawPivot::clawClear
         )
       )
     );
 
+    blueReef.onTrue(Commands.parallel(elevator.setElevatorPosition(1.4), clawPivot.setClawPivotAngle(0.05)));
+    greenReef.onTrue(Commands.parallel(elevator.setElevatorPosition(3), clawPivot.setClawPivotAngle(0.05)));
+
     L3.onTrue(
       (
-        elevator.setElevatorPosition(3.5)
+        elevator.setElevatorPosition(3.35)
         .onlyIf(
           clawPivot::clawClear
         )
@@ -296,7 +331,7 @@ public class RobotContainer {
     );
 
     L4.onTrue(
-      elevator.setElevatorPosition(5.58)
+      elevator.setElevatorPosition(5.5)
       .until(
         elevator::endCommand
       ).onlyIf(
@@ -314,7 +349,7 @@ public class RobotContainer {
       ).andThen(
         Commands.parallel(
           intakePivot.setIntakePivotAngle(0),
-          elevator.setElevatorPosition(0), 
+          elevator.setElevatorPosition(0.0002),
           clawPivot.setClawPivotAngle(0.03)
         )
       )
@@ -324,18 +359,16 @@ public class RobotContainer {
     controller.R2().onTrue(
       Commands.parallel(
         intake.setintakePower(1),
-        intakePivot.setIntakePivotAngle(0.38))
+        intakePivot.setIntakePivotAngle(0.36))
       .until(intake::getIntakeBreak)
       .andThen(
-        intakePivot.setIntakePivotAngle(.2)
-      ).until(elevator::elevatorReset)
-      .andThen(
         Commands.parallel(
-            intake.setintakePower(0.3),
+            intake.setintakePower(0.5),
             index.setIndexPower(1),
             claw.setClawPower(0.1),
-            clawPivot.setClawPivotAngle(-0.055))
-          )
+            clawPivot.setClawPivotAngle(-0.058),
+            intakePivot.setIntakePivotAngle(.2))
+          ).until(claw::clawBroke)
       .andThen(
         Commands.parallel(
           intakePivot.setIntakePivotAngle(0),
@@ -350,6 +383,8 @@ public class RobotContainer {
         intake.setintakePower(0.7))
       .until(intake::getIntakeBreak)
       );
+
+
   }
 
 
@@ -360,7 +395,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // return drive.followPathCommand("Example Path");
-    return null;
+    return autoChooser.selectedCommandScheduler();
   }
 
 
@@ -370,16 +405,25 @@ public class RobotContainer {
   }
 
   public boolean axis1ThresholdGreatererThanPoint5(){
-    return Math.abs(buttonPannel.getRawAxis( 1)) > .5;
+    return buttonPannel.getRawAxis( 1) > .5;
   }
 
   public boolean axis0ThresholdGreatererThanPoint5(){
-    return Math.abs(buttonPannel.getRawAxis(0)) > .5;
+    return buttonPannel.getRawAxis(0) > 0;
   }
+
+  public boolean axis0ThresholdLessThanPoint5(){
+    return buttonPannel.getRawAxis( 0) < 0;
+  }
+
+  public boolean axis1ThresholdLessThanPoint5(){
+    return buttonPannel.getRawAxis(1) < .5;
+  }
+  
 
   private AutoRoutine initRoutine() {
     final AutoRoutine routine = autoFactory.newRoutine("TestRoutine");
-    final AutoTrajectory intialPath = routine.trajectory("InitPath");
+    final AutoTrajectory intialPath = routine.trajectory("Source");
 
 
     routine.active().onTrue(

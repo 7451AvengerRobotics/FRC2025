@@ -34,13 +34,13 @@ public class Elevator extends SubsystemBase {
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.58;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.51;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ElevatorConstants.kElevatorGearRatio;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(4.5)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(8)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
@@ -89,18 +89,18 @@ public class Elevator extends SubsystemBase {
         return false;
     }
 
-    public void reset() {
-        if (getLimitSwitch()) {
-            elevator.getConfigurator().setPosition(0);
-        }
-    }
+    // public void reset() {
+    //     if (getLimitSwitch()) {
+    //         elevator.getConfigurator().setPosition(0);
+    //     }
+    // }
 
     
 
     public Command setElevatorPosition(double rotations) {
         return run(() -> {
             elevate(rotations);
-            reset();
+            //reset();
         });
     }
 

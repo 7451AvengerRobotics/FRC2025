@@ -33,7 +33,7 @@ public class IntakePivot extends SubsystemBase {
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.5)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.75)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(7)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 

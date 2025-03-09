@@ -29,6 +29,9 @@ public class Claw extends SubsystemBase {
         return runEnd(
             () -> {
                 run(power);
+                if(motorStall() && !clawBroke()){
+                    run(0.2);
+                }
             }, 
             () -> {
                 run(0);
@@ -44,11 +47,12 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean motorStall() {
-       return (claw.getOutputCurrent() > 30 && claw.getEncoder().getVelocity() == 0);
+       return (claw.getOutputCurrent() > 41);
     }
 
     @Override
     public void periodic(){
         SmartDashboard.putBoolean("Claw Beam Break", clawBroke());
+        SmartDashboard.putNumber("Claw Current", claw.getOutputCurrent());
     }
 }

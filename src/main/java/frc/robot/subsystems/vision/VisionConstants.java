@@ -35,10 +35,10 @@ public class VisionConstants {
   // (Not used by Limelight, configure in web UI instead)
   public static Transform3d limelight3Transform3d =
     new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(5.516), Units.inchesToMeters(5.887), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(170)));
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(190)));
   public static Transform3d limelight2Transform3d =
     new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(190)));
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(170)));
   public static Transform3d frontRightTransform3d =
     new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(-30)));
@@ -47,8 +47,8 @@ public class VisionConstants {
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(30)));
 
   // Basic filtering thresholds
-  public static double maxAmbiguity = 0.3;
-  public static double maxZError = 0.4;
+  public static double maxAmbiguity = 0.2;
+  public static double maxZError = 0.2;
 
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)

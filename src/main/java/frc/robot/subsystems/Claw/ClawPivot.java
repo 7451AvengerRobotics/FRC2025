@@ -29,10 +29,10 @@ public class ClawPivot extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ClawConstants.kClawGearRatio;
-        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(1)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.75)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 

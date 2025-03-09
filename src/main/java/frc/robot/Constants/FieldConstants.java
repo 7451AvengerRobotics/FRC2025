@@ -2,8 +2,6 @@ package frc.robot.Constants;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.AllianceFlipUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +60,7 @@ public class FieldConstants {
 
     public static final Pose2d reef0 = new Pose2d(
         Units.inchesToMeters(138),
-        Units.inchesToMeters(162.500),
+        Units.inchesToMeters(158.500),
         Rotation2d.fromDegrees(180));
     public static final Pose2d reef1 = new Pose2d(
         Units.inchesToMeters(160.373),

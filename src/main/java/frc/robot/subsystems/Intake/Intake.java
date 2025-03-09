@@ -46,6 +46,6 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic(){
-        SmartDashboard.putBoolean("break", intakebreak.get());
+        SmartDashboard.putBoolean("break", getIntakeBreak());
     }
 }
