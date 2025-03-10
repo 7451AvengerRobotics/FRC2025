@@ -39,3 +39,103 @@
     redReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef3.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
     yellowReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef4.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
     blackReef.and(controller.R1()).whileTrue(drive.driveToPose(AllianceFlipUtil.apply(Reef.reef5.plus(new Transform2d(new Translation2d(0.5,0), new Rotation2d(0))))));
+
+
+    private AutoRoutine initRoutine() {
+        final AutoRoutine routine = autoFactory.newRoutine("TestRoutine");
+        final AutoTrajectory intialPath = routine.trajectory("Init Path");
+        final AutoTrajectory sourcePath = routine.trajectory("Source");
+        final AutoTrajectory returnPath = routine.trajectory("Score");
+
+        routine.active().onTrue(
+                Commands.sequence(
+                        intialPath.resetOdometry(),
+                        intialPath.cmd()));
+
+        final Trigger autoAlign = intialPath.done();
+
+        autoAlign.onTrue(
+                Commands.sequence(
+                        Commands.sequence(
+                                drive.driveToClosestReefScoringFaceWithTranslate(
+                                        new Transform2d(new Translation2d(0.52, 0.18), new Rotation2d(0))),
+                                elevator.setElevatorPosition(2).onlyIf(clawPivot::clawClear),
+                                claw.setClawPower(0.2).until(claw::notClawBroke)),
+                        sourcePath.cmd()));
+
+        final Trigger lowerIntake  = sourcePath.atPose(
+            new Pose2d(4.285841941833496, 0.6999543309211731, new Rotation2d()),
+            0.2,
+            0.2
+        );
+
+        lowerIntake.onTrue(Commands.parallel(
+            intake.setintakePower(1),
+            intakePivot.setIntakePivotAngle(0.36))
+            .until(intake::getIntakeBreak)
+            .andThen(
+                    Commands.parallel(
+                            intake.setintakePower(0.5),
+                            index.setIndexPower(1),
+                            claw.setClawPower(0.1),
+                            clawPivot.setClawPivotAngle(-0.058),
+                            intakePivot.setIntakePivotAngle(.2)))
+            .until(claw::clawBroke)
+            .andThen(
+                    Commands.parallel(
+                            intakePivot.setIntakePivotAngle(0),
+                            clawPivot.setClawPivotAngle(0.03))));
+    
+                            
+        final Trigger atSource = sourcePath.done();
+
+        atSource.onTrue(
+            returnPath.cmd()
+        );
+
+        final Trigger score = returnPath.done();
+
+        score.onTrue(
+            drive.driveToClosestReefScoringFaceWithTranslate(
+                                        new Transform2d(new Translation2d(0.52, -0.18), new Rotation2d(0)))
+        );
+
+        return routine;
+    }
+
+
+        // blackReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // whiteReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef1.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
+    //   )
+    // );
+    
+    // redReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef5.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // yellowReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef2.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+
+    // blueReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef3.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );
+   
+    // greenReef.whileTrue(
+    //   Commands.parallel(
+    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef4.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
+    //   )
+    // );

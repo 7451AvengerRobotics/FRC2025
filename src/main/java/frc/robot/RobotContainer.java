@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.Constants.ButtonConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.Autos.AutoRoutines;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
 import frc.robot.commands.LEDCommands.setLedColorCommand;
 import frc.robot.generated.TunerConstantsNew;
@@ -29,7 +30,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,17 +38,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
-import javax.xml.transform.Source;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.path.PathPlannerPath;
-
-import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
 import frc.robot.subsystems.vision.VisionIO; 
 
 
@@ -64,9 +55,8 @@ public class RobotContainer {
   private final Drive drive;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
   private final Joystick buttonPannel = new Joystick(0);
-  private final AutoFactory autoFactory;
-  //private final AutoChooser autoChooser;
   private final SendableChooser<Command> autoChooser1;
+  private final AutoRoutines autos;
 
 
 
@@ -139,29 +129,19 @@ public class RobotContainer {
         
     }
 
+    autos = new AutoRoutines(drive);
     autoChooser1 = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Mode", autoChooser1);
     NamedCommands.registerCommand("Score", drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0,0.18), new Rotation2d(0))));
     //NamedCommands.registerCommand("Score", claw.setClawPower(0.5));
 
+
+
     
 
     configureBindings();
+    autoChooser1.addOption("Processor Side 2 Coral ", autos.processorSide2Coral());
 
-    autoFactory = new AutoFactory(
-                drive::getPose,
-                drive::setPose,
-                drive::followTrajectory,
-                true,
-                drive
-              );
-
-    //autoChooser = new AutoChooser();
-
-        // Add options to the chooser
-    //autoChooser.addRoutine("Example Routine", this::initRoutine);
-
-    //SmartDashboard.putData("Chooser", autoChooser);
 
     led.setDefaultCommand(
       new setLedColorCommand(led, 255, 0, 0)
@@ -223,43 +203,6 @@ public class RobotContainer {
     );
 
     controller.options().onTrue(clawPivot.setClawPivotAngle(-0.058));
-
-
-    // blackReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef0.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
-    //   )
-    // );
-
-    // whiteReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef1.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
-    //   )
-    // );
-    
-    // redReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef5.plus(new Transform2d(new Translation2d(0.52, 0), new Rotation2d(0)))))
-    //   )
-    // );
-
-    // yellowReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef2.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
-    //   )
-    // );
-
-    // blueReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef3.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
-    //   )
-    // );
-   
-    // greenReef.whileTrue(
-    //   Commands.parallel(
-    //     drive.driveToPose(AllianceFlipUtil.apply(FieldConstants.Reef.reef4.plus(new Transform2d(new Translation2d(0.52,0), new Rotation2d(0)))))
-    //   )
-    // );
 
     //Drive Commands
     controller.R1().whileTrue(
@@ -414,11 +357,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return Commands.sequence(drive.followPPPathCommand("InitPath"), 
-    drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,0.18), new Rotation2d(0))),
-    drive.followPPPathCommand("Source"),
-    drive.followPPPathCommand("BackReef"),
-    drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,0.18), new Rotation2d(0))));
+    return autoChooser1.getSelected();
   }
 
 
@@ -441,20 +380,5 @@ public class RobotContainer {
 
   public boolean axis1ThresholdLessThanPoint5(){
     return buttonPannel.getRawAxis(1) < .5;
-  }
-  
-
-  private AutoRoutine initRoutine() {
-    final AutoRoutine routine = autoFactory.newRoutine("TestRoutine");
-    final AutoTrajectory intialPath = routine.trajectory("Source");
-
-
-    routine.active().onTrue(
-      Commands.sequence(
-          intialPath.resetOdometry(),
-          intialPath.cmd()
-        )
-      );
-    return routine;
   }
 }
