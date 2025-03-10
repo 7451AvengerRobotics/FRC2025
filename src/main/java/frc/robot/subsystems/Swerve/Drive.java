@@ -469,7 +469,10 @@ public class Drive extends SubsystemBase {
 
   public Pose2d getClosestReef() {
     Pose2d closestReef = FieldConstants.Reef.reef0;
-    for (Pose2d reef : FieldConstants.Reef.reefs) {
+    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean()
+        ? Arrays.asList(FieldConstants.Reef.redReefs)
+        : Arrays.asList(FieldConstants.Reef.blueReefs);
+    for (Pose2d reef : reefCenterPosesList) {
       if (getDistance(reef) < getDistance(closestReef)) {
         closestReef = reef;
       }
