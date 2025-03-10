@@ -16,11 +16,11 @@ public class AutoRoutines {
 
     public Command processorSide2Coral() {
         return Commands.sequence(
-                drive.followPPPathCommand("InitPath"),
+                drive.ChoreoAuto("InitPath"),
                 drive.driveToClosestReefScoringFaceWithTranslate(
                         new Transform2d(new Translation2d(0.52, 0.18), new Rotation2d(0))),
-                drive.followPPPathCommand("Source"),
-                drive.followPPPathCommand("BackReef"),
+                drive.ChoreoAuto("Source"),
+                drive.ChoreoAuto("BackReef"),
                 drive.driveToClosestReefScoringFaceWithTranslate(
                         new Transform2d(new Translation2d(0.52, 0.18), new Rotation2d(0))));
     }

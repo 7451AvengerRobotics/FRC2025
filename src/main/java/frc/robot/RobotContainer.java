@@ -361,11 +361,6 @@ public class RobotContainer {
   }
 
 
-
-  public Command scoreProcessor() {
-    return drive.driveToPose(AllianceFlipUtil.apply(drive.getClosestReef()));
-  }
-
   public boolean axis1ThresholdGreatererThanPoint5(){
     return buttonPannel.getRawAxis( 1) > .5;
   }

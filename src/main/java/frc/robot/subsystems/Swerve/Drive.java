@@ -31,6 +31,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.util.struct.parser.ParseException;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -49,6 +50,7 @@ import frc.robot.generated.TunerConstantsNew;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LocalADStarAK;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -153,7 +155,7 @@ public class Drive extends SubsystemBase {
         new PPHolonomicDriveController(
             new PIDConstants(5, 0.0, 0.0), new PIDConstants(5, 0.0, 0.0)),
         PP_CONFIG,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        () -> false,
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
@@ -288,6 +290,31 @@ public class Drive extends SubsystemBase {
     kinematics.resetHeadings(headings);
     stop();
   }
+
+  public Command ChoreoAuto(String name) {
+      try {
+              PathPlannerPath originalPath = PathPlannerPath.fromChoreoTrajectory(name);
+              PathPlannerPath finalPath;
+              
+              if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+                  finalPath = originalPath.flipPath();
+              }
+              else {
+                  finalPath = originalPath;
+              }
+          
+          
+              return AutoBuilder.followPath(finalPath).alongWith(Commands.runOnce(() -> resetPose(finalPath.getStartingHolonomicPose().get())));
+      } catch (Exception e) {
+        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+        return Commands.none();
+      } 
+    }
+  
+  private void resetPose(final Pose2d robotPose) {
+      poseEstimator.resetPosition(getGyroRotation(), getModulePositions(), robotPose);
+  }
+  
 
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return run(() -> runCharacterization(0.0))
@@ -433,6 +460,7 @@ public class Drive extends SubsystemBase {
     try {
       // Load the path you want to follow using its name in the GUI
       PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
+      this.setPose(path.getStartingDifferentialPose());
 
       // Create a path following command using AutoBuilder. This will also trigger
       // event markers.
@@ -467,15 +495,6 @@ public class Drive extends SubsystemBase {
     return distance;
   }
 
-  public Pose2d getClosestReef() {
-    Pose2d closestReef = FieldConstants.Reef.reef0;
-    for (Pose2d reef : FieldConstants.Reef.reefs) {
-      if (getDistance(reef) < getDistance(closestReef)) {
-        closestReef = reef;
-      }
-    }
-    return closestReef;
-  }
 
   public Command driveToClosestReefScoringFace() {
     final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean()
