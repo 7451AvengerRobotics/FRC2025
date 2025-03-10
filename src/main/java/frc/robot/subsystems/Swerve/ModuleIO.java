@@ -39,4 +39,10 @@ public interface ModuleIO {
 
   /** Run the turn motor to the specified rotation. */
   public default void setTurnPosition(Rotation2d rotation) {}
+
+  default void setInputs(
+    final double desiredDriverVelocity,
+    final double desiredTurnerRotations,
+    final double feedforwardAmps
+) {}
 }

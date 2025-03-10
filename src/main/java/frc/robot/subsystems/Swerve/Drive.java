@@ -8,6 +8,7 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -151,7 +152,7 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(1, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
+            new PIDConstants(5, 0.0, 0.0), new PIDConstants(5, 0.0, 0.0)),
         PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -425,6 +426,20 @@ public class Drive extends SubsystemBase {
         ).finallyDo(() -> holonomicControllerActive = false);
     }
 
+
+    public Command followPPPathCommand(String pathName) {
+      try{
+        // Load the path you want to follow using its name in the GUI
+        PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
+
+        // Create a path following command using AutoBuilder. This will also trigger event markers.
+        return AutoBuilder.followPath(path);
+    } catch (Exception e) {
+        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+        return Commands.none();
+    }
+
+    }
     public Command driveRight() {
       return Commands.runOnce(() -> {
         Pose2d currentPose = getPose();
@@ -488,6 +503,7 @@ public class Drive extends SubsystemBase {
       );
        
    }
+   
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
       return kinematics.toChassisSpeeds(

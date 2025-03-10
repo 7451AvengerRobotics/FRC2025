@@ -53,11 +53,13 @@ public class HolonomicDriveWithPIDController {
         );
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
-                xFeedback,
-                yFeedback,
+                xFeedback*0.75,
+                yFeedback*0.75,
                 rotationFeedback,
                 currentPose.getRotation()
         );
+
+        
     }
     
 }

@@ -15,13 +15,17 @@ package frc.robot.subsystems.Swerve;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.generated.TunerConstantsNew;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -31,6 +35,8 @@ public class Module {
   private final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       constants;
+  private SwerveModuleState lastDesiredState = new SwerveModuleState();
+  private SwerveModuleState lastTorqueFeedforwardState = new SwerveModuleState();
 
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
@@ -143,5 +149,50 @@ public class Module {
   /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
     return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
+  }
+
+  public static void scaleWithErrorCosine(final SwerveModuleState state, final Rotation2d wheelRotation) {
+        // see https://github.com/wpilibsuite/allwpilib/issues/5749
+        state.speedMetersPerSecond *= state.angle.minus(wheelRotation).getCos();
+  }
+
+    /**
+     * Computes the desired drive motor velocity given a desired {@link SwerveModuleState}
+     * i.e. the rotor velocity given wheel velocity (rps)
+     *
+     * @param wantedState the wanted state of the module
+     * @return the desired rotor velocity
+     * @see SwerveModuleState
+     */
+  public double computeDesiredDriverVelocity(final SwerveModuleState wantedState, final Rotation2d wheelRotation) {
+        Module.scaleWithErrorCosine(wantedState, wheelRotation);
+        return wantedState.speedMetersPerSecond / TunerConstantsNew.FrontLeft.WheelRadius;
+  }
+
+    /**
+     * Computes the desired turn motor velocity given a desired {@link SwerveModuleState}
+     * i.e. the rotor position given wheel rotational position (rots)
+     *
+     * @param wantedState the wanted state of the module
+     * @return the desired rotor position
+     * @see SwerveModuleState
+     */
+    public double computeDesiredTurnerRotations(final SwerveModuleState wantedState) {
+        return wantedState.angle.getRotations();
+    }
+
+    public void setDesiredState(final SwerveModuleState state, final SwerveModuleState torqueFeedforwardNm) {
+      final Rotation2d currentWheelRotation = getAngle();
+      final double wheelTorqueNm = torqueFeedforwardNm.speedMetersPerSecond;
+      final double wheelTorqueAmps = wheelTorqueNm / DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+
+      state.optimize(currentWheelRotation);
+      final double desiredDriverVelocity = computeDesiredDriverVelocity(state, currentWheelRotation);
+      final double desiredTurnerRotations = computeDesiredTurnerRotations(state);
+
+      io.setInputs(desiredDriverVelocity, desiredTurnerRotations, wheelTorqueAmps);
+
+      this.lastDesiredState = state;
+      this.lastTorqueFeedforwardState = torqueFeedforwardNm;
   }
 }

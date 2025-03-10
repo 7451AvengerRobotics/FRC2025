@@ -29,13 +29,21 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
+import javax.xml.transform.Source;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
@@ -57,7 +65,8 @@ public class RobotContainer {
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
   private final Joystick buttonPannel = new Joystick(0);
   private final AutoFactory autoFactory;
-  private final AutoChooser autoChooser;
+  //private final AutoChooser autoChooser;
+  private final SendableChooser<Command> autoChooser1;
 
 
 
@@ -73,6 +82,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+  
 
     NamedCommands.registerCommand("L2", elevator.setElevatorPosition(2.1).until(elevator::endCommand).andThen(claw.setClawPower(0.3)));
 
@@ -123,8 +134,17 @@ public class RobotContainer {
           // Replayed robot, disable IO implementations
           // (Use same number of dummy implementations as the real robot)
             vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-              break;    
+              break; 
+        
+        
     }
+
+    autoChooser1 = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Mode", autoChooser1);
+    NamedCommands.registerCommand("Score", drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0,0.18), new Rotation2d(0))));
+    //NamedCommands.registerCommand("Score", claw.setClawPower(0.5));
+
+    
 
     configureBindings();
 
@@ -136,12 +156,12 @@ public class RobotContainer {
                 drive
               );
 
-    autoChooser = new AutoChooser();
+    //autoChooser = new AutoChooser();
 
         // Add options to the chooser
-    autoChooser.addRoutine("Example Routine", this::initRoutine);
+    //autoChooser.addRoutine("Example Routine", this::initRoutine);
 
-    SmartDashboard.putData("Chooser", autoChooser);
+    //SmartDashboard.putData("Chooser", autoChooser);
 
     led.setDefaultCommand(
       new setLedColorCommand(led, 255, 0, 0)
@@ -384,7 +404,7 @@ public class RobotContainer {
       .until(intake::getIntakeBreak)
       );
 
-
+    
   }
 
 
@@ -394,8 +414,11 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // return drive.followPathCommand("Example Path");
-    return autoChooser.selectedCommandScheduler();
+    return Commands.sequence(drive.followPPPathCommand("InitPath"), 
+    drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,0.18), new Rotation2d(0))),
+    drive.followPPPathCommand("Source"),
+    drive.followPPPathCommand("BackReef"),
+    drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52,0.18), new Rotation2d(0))));
   }
 
 
