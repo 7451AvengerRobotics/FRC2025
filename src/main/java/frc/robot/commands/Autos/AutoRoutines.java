@@ -35,10 +35,10 @@ public class AutoRoutines {
 
     public Command processorSide2L4Coral() {
         return Commands.sequence(
+                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
                 Commands.parallel(
                         drive.followPPPathCommand("InitialRightSide"),
-                        clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear)
-                                .andThen(elevator.setElevatorPosition(5.5)
+                        (elevator.setElevatorPosition(5.5)
                                         .until(
                                                 elevator::endCommand)
                                         .onlyIf(
