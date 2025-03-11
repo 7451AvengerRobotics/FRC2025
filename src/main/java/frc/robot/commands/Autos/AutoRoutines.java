@@ -35,10 +35,10 @@ public class AutoRoutines {
 
     public Command processorSide2L4Coral() {
         return Commands.sequence(
+                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
                 Commands.parallel(
                         drive.followPPPathCommand("InitialRightSide"),
-                        clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear)
-                                .andThen(elevator.setElevatorPosition(5.5)
+                        (elevator.setElevatorPosition(5.5)
                                         .until(
                                                 elevator::endCommand)
                                         .onlyIf(
@@ -145,14 +145,14 @@ public class AutoRoutines {
                                                 intakePivot.setIntakePivotAngle(0),
                                                 clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5))),
                 Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.72, -0.24), new Rotation2d(0)))),
+                        new Transform2d(new Translation2d(0.72, -0.24), new Rotation2d(0))),
                 elevator.setElevatorPosition(5.5)
                         .until(
                                 elevator::endCommand)
                         .onlyIf(
                                 clawPivot::clawClear)
                         .andThen(
-                                clawPivot.setClawPivotAngle(-0.027).until(clawPivot::endCommand)
-                                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke))));
+                                clawPivot.setClawPivotAngle(-0.027).until(clawPivot::endCommand)))
+                                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
     }
 }
