@@ -42,12 +42,10 @@ public class AutoRoutines {
                                         .until(
                                                 elevator::endCommand)
                                         .onlyIf(
-                                                clawPivot::clawClear)))
-                        .andThen(
-                                clawPivot.setClawPivotAngle(-0.027).until(clawPivot::endCommand)),
+                                                clawPivot::clawClear))),
                 Commands.parallel(
                         drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.66, -0.24), new Rotation2d(0))))
+                                new Transform2d(new Translation2d(0.66, -0.24), new Rotation2d(0))), clawPivot.setClawPivotAngle(-0.027).until(clawPivot::endCommand))
                         .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
                 Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
                         intakePivot.setIntakePivotAngle(0),
