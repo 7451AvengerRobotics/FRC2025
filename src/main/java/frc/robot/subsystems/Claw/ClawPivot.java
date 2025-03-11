@@ -84,6 +84,13 @@ public class ClawPivot extends SubsystemBase {
         return (getClawPivotPosition() > 0.03 && claw_pivot.getVelocity(true ).getValueAsDouble() == 0);
     }
 
+    public boolean endCommand() {
+        if (claw_pivot.getVelocity(true).getValueAsDouble() == 0.0 && (claw_pivot.getPosition().getValueAsDouble() > -0.027 && claw_pivot.getPosition().getValueAsDouble() < -0.02)) {
+            return true;
+        }
+        return false;
+    }
+    
     @Override
     public void periodic(){
         SmartDashboard.putNumber("Claw Rotations", claw_pivot.getPosition().getValueAsDouble());

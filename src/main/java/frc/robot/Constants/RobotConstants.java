@@ -3,10 +3,10 @@ package frc.robot.Constants;
 public class RobotConstants {
 
     public static class IndexConstants{
-        public static final int kIndexID = 40;
+        public static final int kIndexID = 51;
     }
     public static class IntakeConstants{
-        public static final int kIntakePivotID = 20;
+        public static final int kIntakePivotID = 49;
         public static final int kIntakeID = 41;
         public static final double kIntakeGearRatio = 62.5;
         public static final double intakePivotkS = 0.25; // Add 0.25 V output to overcome static friction

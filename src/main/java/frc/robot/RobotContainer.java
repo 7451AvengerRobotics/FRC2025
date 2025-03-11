@@ -38,7 +38,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import frc.robot.subsystems.vision.VisionIO; 
 
 
@@ -74,7 +73,7 @@ public class RobotContainer {
 
   
 
-    NamedCommands.registerCommand("L2", elevator.setElevatorPosition(2.1).until(elevator::endCommand).andThen(claw.setClawPower(0.3)));
+    //NamedCommands.registerCommand("L2", elevator.setElevatorPosition(2.1).until(elevator::endCommand).andThen(claw.setClawPower(0.3)));
 
 
     switch (SimConstants.currentMode) {
@@ -90,8 +89,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
-                new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
+                // new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
+                // new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
                 new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d));
                 //new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d));
         break;
@@ -128,10 +127,10 @@ public class RobotContainer {
         
     }
 
-    autos = new AutoRoutines(drive);
+    autos = new AutoRoutines(drive, elevator, clawPivot, intakePivot, claw, intake, index);
     autoChooser1 = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Mode", autoChooser1);
-    NamedCommands.registerCommand("Score", drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0,0.18), new Rotation2d(0))));
+    //NamedCommands.registerCommand("Score", drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0,0.18), new Rotation2d(0))));
     //NamedCommands.registerCommand("Score", claw.setClawPower(0.5));
 
 
@@ -139,7 +138,8 @@ public class RobotContainer {
     
 
     configureBindings();
-    autoChooser1.addOption("Processor Side 2 Coral ", autos.processorSide2Coral());
+    autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
+    autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
 
 
     led.setDefaultCommand(
@@ -201,7 +201,7 @@ public class RobotContainer {
       )
     );
 
-    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.058));
+    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.060));
 
     //Drive Commands
     controller.R1().whileTrue(
@@ -241,7 +241,7 @@ public class RobotContainer {
     
 
       // Score or Suck
-    controller.L2().onTrue((claw.setClawPower(0.2).until(claw::notClawBroke))); 
+    controller.L2().whileTrue((claw.setClawPower(0.4))); 
 
       // Climber One
     controller.povDown().onTrue(
@@ -300,9 +300,17 @@ public class RobotContainer {
         clawPivot::clawClear
       )
       .andThen(
-        clawPivot.setClawPivotAngle(0.013)
+        clawPivot.setClawPivotAngle(-0.027)
       )
     );
+
+    yellowReef.whileTrue(
+      drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.65,0.18), new Rotation2d(0))
+    ));
+
+    whiteReef.whileTrue(
+      drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.65,-0.18), new Rotation2d(0))
+    ));
       //Reset
     reset.onTrue(
       climb.setClimberAngle(0)
@@ -326,7 +334,7 @@ public class RobotContainer {
       .andThen(
         Commands.parallel(
             intake.setintakePower(0.5),
-            index.setIndexPower(1),
+            index.setIndexPower(0.7),
             claw.setClawPower(0.1),
             clawPivot.setClawPivotAngle(-0.058),
             intakePivot.setIntakePivotAngle(.2))

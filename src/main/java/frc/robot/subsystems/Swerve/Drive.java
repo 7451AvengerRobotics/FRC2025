@@ -457,7 +457,7 @@ public class Drive extends SubsystemBase {
   public Command followPPPathCommand(String pathName) {
     try {
       // Load the path you want to follow using its name in the GUI
-      PathPlannerPath path = PathPlannerPath.fromChoreoTrajectory(pathName);
+      PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
       this.setPose(path.getStartingDifferentialPose());
 
       // Create a path following command using AutoBuilder. This will also trigger
