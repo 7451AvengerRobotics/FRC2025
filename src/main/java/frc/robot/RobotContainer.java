@@ -140,6 +140,8 @@ public class RobotContainer {
     configureBindings();
     autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
     autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
+    autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
+    autoChooser1.addOption("Center Auto", autos.centerAuto());
 
 
     led.setDefaultCommand(
@@ -201,7 +203,7 @@ public class RobotContainer {
       )
     );
 
-    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.060));
+    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.061));
 
     //Drive Commands
     controller.R1().whileTrue(
@@ -311,6 +313,22 @@ public class RobotContainer {
     whiteReef.whileTrue(
       drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.65,-0.18), new Rotation2d(0))
     ));
+
+    redReef.onTrue(
+      Commands.parallel(
+            intake.setintakePower(-0.5),
+            index.setIndexPower(-0.7),
+            claw.setClawPower(0.1),
+            clawPivot.setClawPivotAngle(0.03),
+            intakePivot.setIntakePivotAngle(.2)).until(intake::getIntakeBreak)
+      .andThen(
+        Commands.parallel(
+          intake.setintakePower(0.5),
+          index.setIndexPower(0.7),
+          claw.setClawPower(0.2),
+          clawPivot.setClawPivotAngle(-0.06)
+        )).until(claw::clawBroke)
+    );
       //Reset
     reset.onTrue(
       climb.setClimberAngle(0)
