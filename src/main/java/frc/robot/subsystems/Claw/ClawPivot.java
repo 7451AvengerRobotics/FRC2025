@@ -85,7 +85,7 @@ public class ClawPivot extends SubsystemBase {
     }
 
     public boolean endCommand() {
-        if (claw_pivot.getVelocity(true).getValueAsDouble() == 0.0 && (claw_pivot.getPosition().getValueAsDouble() > -0.027 && claw_pivot.getPosition().getValueAsDouble() < -0.02)) {
+        if (claw_pivot.getVelocity(true).getValueAsDouble() == 0.0 && (claw_pivot.getPosition().getValueAsDouble() > -0.01 && claw_pivot.getPosition().getValueAsDouble() < -0.005)) {
             return true;
         }
         return false;

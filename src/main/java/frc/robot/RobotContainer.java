@@ -89,8 +89,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                // new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
-                // new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
+                 new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
+                 new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
                 new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d));
                 //new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d));
         break;
@@ -141,6 +141,7 @@ public class RobotContainer {
     autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
     autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
     autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
+    autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
     autoChooser1.addOption("Center Auto", autos.centerAuto());
 
 
@@ -170,7 +171,7 @@ public class RobotContainer {
     JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
     JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
     JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
-    JoystickButton algae2 = new JoystickButton(buttonPannel, ButtonConstants.algae2);
+    // JoystickButton algae2 = new JoystickButton(buttonPannel, ButtonConstants.algae2);
     JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
     JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
     JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
@@ -179,8 +180,8 @@ public class RobotContainer {
     JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
     JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
     GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdLessThanPoint5);
-    GamepadAxisButton algae1 = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
-    GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdLessThanPoint5);
+    // GamepadAxisButton algae1 = new GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
+    // GamepadAxisButton blackReef = new GamepadAxisButton(this::axis0ThresholdLessThanPoint5);
 
     clawPivot.setDefaultCommand(
       clawPivot.setClawPivotAngle(0.03)
@@ -189,9 +190,9 @@ public class RobotContainer {
     drive.setDefaultCommand(
       DriveCommands.joystickDrive(
         drive,
-        () -> -controller.getLeftY(),
-        () -> -controller.getLeftX(),
-        () -> -controller.getRightX()
+        () -> -controller.getLeftY()*0.8,
+        () -> -controller.getLeftX()*0.8,
+        () -> -controller.getRightX()*0.8
       )
     );
       
@@ -249,13 +250,13 @@ public class RobotContainer {
     controller.povDown().onTrue(
       Commands.parallel(
         intakePivot.setIntakePivotAngle(0.36), 
-        clawPivot.setClawPivotAngle(-0.03), 
-        climb.setClimberAngle(-0.23)
+        clawPivot.setClawPivotAngle(0),
+        climb.setClimberAngle(-0.22)
       )
     );
     controller.povUp().whileTrue(
       Commands.parallel(
-        clawPivot.setClawPivotAngle(-0.03), 
+        clawPivot.setClawPivotAngle(0), 
         climb.setClimberPower(0.37)
           .until(climb::endClimbSeq)
       )
@@ -275,19 +276,19 @@ public class RobotContainer {
 
     L2.onTrue(
       (
-        elevator.setElevatorPosition(2)
+        elevator.setElevatorPosition(1.9)
         .onlyIf(
           clawPivot::clawClear
         )
       )
     );
 
-    blueReef.onTrue(Commands.parallel(elevator.setElevatorPosition(1.4), clawPivot.setClawPivotAngle(0.05)));
-    greenReef.onTrue(Commands.parallel(elevator.setElevatorPosition(3), clawPivot.setClawPivotAngle(0.05)));
+    blueReef.onTrue(Commands.parallel(elevator.setElevatorPosition(1.4), clawPivot.setClawPivotAngle(0.09)));
+    greenReef.onTrue(Commands.parallel(elevator.setElevatorPosition(3), clawPivot.setClawPivotAngle(0.09)));
 
     L3.onTrue(
       (
-        elevator.setElevatorPosition(3.35)
+        elevator.setElevatorPosition(3.25)
         .onlyIf(
           clawPivot::clawClear
         )
@@ -302,7 +303,7 @@ public class RobotContainer {
         clawPivot::clawClear
       )
       .andThen(
-        clawPivot.setClawPivotAngle(-0.027)
+        clawPivot.setClawPivotAngle(-0.008)
       )
     );
 
@@ -320,7 +321,7 @@ public class RobotContainer {
             index.setIndexPower(-0.7),
             claw.setClawPower(0.1),
             clawPivot.setClawPivotAngle(0.03),
-            intakePivot.setIntakePivotAngle(.2)).until(intake::getIntakeBreak)
+            intakePivot.setIntakePivotAngle(.2)).withTimeout(0.5)
       .andThen(
         Commands.parallel(
           intake.setintakePower(0.5),
@@ -336,7 +337,7 @@ public class RobotContainer {
         climb::endClimbCommand
       ).andThen(
         Commands.parallel(
-          intakePivot.setIntakePivotAngle(0),
+          intakePivot.setIntakePivotAngle(0.06),
           elevator.setElevatorPosition(0.0002),
           clawPivot.setClawPivotAngle(0.03)
         )

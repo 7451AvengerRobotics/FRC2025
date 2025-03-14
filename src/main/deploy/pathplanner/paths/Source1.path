@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.032154605263157,
-        "y": 5.333552631578948
+        "x": 5.048630136986302,
+        "y": 5.279644691780822
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.090542763157895,
-        "y": 7.604276315789473
+        "x": 6.1905821917808215,
+        "y": 6.9925727739726025
       },
       "isLocked": false,
       "linkedName": null
@@ -50,10 +50,10 @@
     "rotation": -139.2678933002908
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Barge",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -119.95360816780148
+    "rotation": 61.50436138175496
   },
   "useDefaultConstraints": true
 }

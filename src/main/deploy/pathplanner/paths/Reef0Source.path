@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.091200657894737,
-        "y": 6.161019736842105
+        "x": 3.0502140410958902,
+        "y": 3.882255993150685
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.369572368421053,
-        "y": 6.084046052631579
+        "x": 2.494263698630137,
+        "y": 3.9123073630136984
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.243832236842105,
-        "y": 5.631825657894736
+        "x": 1.9232876712328766,
+        "y": 3.882255993150685
       },
       "prevControl": {
-        "x": 5.955838815789473,
-        "y": 5.901233552631579
+        "x": 2.554366438356165,
+        "y": 3.837178938356164
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 56.9761324442035
+    "rotation": 176.42366562500268
   },
   "reversed": false,
-  "folder": "Barge",
+  "folder": "ProcessorL2",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
