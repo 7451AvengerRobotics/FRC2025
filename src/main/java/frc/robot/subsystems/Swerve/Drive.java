@@ -312,7 +312,7 @@ public class Drive extends SubsystemBase {
               }
           
           
-              return AutoBuilder.followPath(finalPath).alongWith(Commands.runOnce(() -> resetPose(finalPath.getStartingHolonomicPose().get())));
+              return AutoBuilder.followPath(finalPath).alongWith(Commands.runOnce(() -> this.setPose(finalPath.getStartingHolonomicPose().get())));
       } catch (Exception e) {
         DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
         return Commands.none();
@@ -468,11 +468,20 @@ public class Drive extends SubsystemBase {
     try {
       // Load the path you want to follow using its name in the GUI
       PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-      this.setPose(path.getStartingDifferentialPose());
+      PathPlannerPath finalPath;
+              
+      if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+          finalPath = path.flipPath();
+      }
+      else {
+          finalPath = path;
+      }
+      
+      
 
       // Create a path following command using AutoBuilder. This will also trigger
       // event markers.
-      return AutoBuilder.followPath(path).alongWith(Commands.runOnce(() -> resetPose(path.getStartingHolonomicPose().get())));
+      return AutoBuilder.followPath(finalPath).alongWith(AutoBuilder.resetOdom(finalPath.getStartingHolonomicPose().get()));
     } catch (Exception e) {
       DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
       return Commands.none();
