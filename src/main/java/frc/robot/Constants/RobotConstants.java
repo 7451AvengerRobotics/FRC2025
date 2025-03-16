@@ -12,7 +12,7 @@ public class RobotConstants {
         public static final double intakePivotkS = 0.25; // Add 0.25 V output to overcome static friction
         public static final double intakePivotkV = 4; // A velocity target of 1 rps results in 0.12 V output
         public static final double intakePivotkA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-        public static final double intakePivotkP = 45; // A position error of 0.2 rotations results in 12 V output
+        public static final double intakePivotkP = 60; // A position error of 0.2 rotations results in 12 V output
         public static final double intakePivotkI = 0; // No output for integrated error
         public static final double intakePivotkD = 0.5; 
         public static final double intakePivotkG = 0.016; 

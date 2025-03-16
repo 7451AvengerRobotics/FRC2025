@@ -26,7 +26,7 @@ public class VisionConstants {
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   // Camera names, must match names configured on coprocessor
-  public static String limelight1Camera = "LimelightLeft";
+  public static String limelight1Camera = "Limelight2";
   public static String limelight2Camera = "Limelight";
   public static String camera0Name = "FrontLeft";
   public static String camera1Name = "FrontRight";
@@ -37,7 +37,7 @@ public class VisionConstants {
     new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(5.516), Units.inchesToMeters(5.887), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(190)));
   public static Transform3d limelight2Transform3d =
-    new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
+    new Transform3d(Units.inchesToMeters(-11.65), Units.inchesToMeters(-5.516), Units.inchesToMeters(5.887), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(170)));
   public static Transform3d frontRightTransform3d =
     new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 

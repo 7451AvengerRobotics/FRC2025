@@ -29,6 +29,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,6 +39,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import frc.robot.subsystems.vision.VisionIO;
 
 /**
@@ -89,8 +92,8 @@ public class RobotContainer {
             drive::addVisionMeasurement,
             new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
             new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
-            new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d));
-        // new VisionIOPhotonVision(VisionConstants.limelight1Camera,
+            new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d),
+            new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d));
         // VisionConstants.limelight2Transform3d));
         break;
 
@@ -138,20 +141,35 @@ public class RobotContainer {
     // drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new
     // Translation2d(0,0.18), new Rotation2d(0))));
     // NamedCommands.registerCommand("Score", claw.setClawPower(0.5));
+    NamedCommands.registerCommand("Score", 
+    Commands.sequence(
+    clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
+    Commands.parallel(
+            drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(new Translation2d(0.52, -0.18),
+                            new Rotation2d(0))),
+            elevator.setElevatorPosition(1.9)
+                    .until(
+                            elevator::endCommand)
+                    .onlyIf(
+                            clawPivot::clawClear))
+            .andThen(claw.setClawPower(0.4).until(claw::notClawBroke))));
 
     configureBindings();
     autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
     autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
+    autoChooser1.addOption("Processor Red Side L2 Coral ", autos.processorRedSide2L2Coral());
     autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
     autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
+    autoChooser1.addOption("red Test", autos.redTest());
     autoChooser1.addOption("Center Auto", autos.centerAuto());
 
     led.setDefaultCommand(
-        new setLedColorCommand(led, 255, 0, 0)
+        new setLedColorCommand(led, 255, 255, 0)
             .until(
                 intake::getIntakeBreak)
             .andThen(
-                new LedStrobeCommand(led, true))
+              new setLedColorCommand(led, 255, 255, 0))
             .until(
                 claw::clawBroke)
             .andThen(
@@ -205,11 +223,11 @@ public class RobotContainer {
     // Drive Commands
     controller.R1().whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.52, 0.18), new Rotation2d(0))));
+            new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())));
 
     controller.L1().whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.52, -0.18), new Rotation2d(0))));
+            new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())));
 
     controller.touchpad().whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
@@ -264,7 +282,7 @@ public class RobotContainer {
     greenReef.onTrue(Commands.parallel(elevator.setElevatorPosition(3), clawPivot.setClawPivotAngle(0.09)));
 
     L3.onTrue(
-        (elevator.setElevatorPosition(3.25)
+        (elevator.setElevatorPosition(3.35)
             .onlyIf(
                 clawPivot::clawClear)));
 
@@ -279,11 +297,11 @@ public class RobotContainer {
 
     yellowReef.whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.65, 0.18), new Rotation2d(0))));
+            new Transform2d(new Translation2d(0.56, 0.15), new Rotation2d(0))));
 
     whiteReef.whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.65, -0.18), new Rotation2d(0))));
+            new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))));
 
     redReef.onTrue(
         Commands.parallel(
@@ -311,43 +329,27 @@ public class RobotContainer {
                     clawPivot.setClawPivotAngle(0.03))));
 
     // Intake All
-    // controller.R2().onTrue(
-    //     Commands.parallel(
-    //         intake.setintakePower(1),
-    //         intakePivot.setIntakePivotAngle(0.36))
-    //         .until(intake::getIntakeBreak)
-    //         .andThen(
-    //             Commands.parallel(
-    //                 intake.setintakePower(0.5),
-    //                 index.setIndexPower(0.7),
-    //                 claw.setClawPower(0.1),
-    //                 clawPivot.setClawPivotAngle(-0.058),
-    //                 intakePivot.setIntakePivotAngle(.2)))
-    //         .until(claw::clawBroke)
-    //         .andThen(
-    //             Commands.parallel(
-    //                 intakePivot.setIntakePivotAngle(0),
-    //                 clawPivot.setClawPivotAngle(0.03))));
-
-    
-
-    controller.R2().onTrue(Commands.either(
+    controller.R2().onTrue(
         Commands.parallel(
-            intake.setintakePower(0.5),
-            index.setIndexPower(0.7),
-            claw.setClawPower(0.1),
-            clawPivot.setClawPivotAngle(-0.058),
-            intakePivot.setIntakePivotAngle(.2))
+            intake.setintakePower(1),
+            intakePivot.setIntakePivotAngle(0.36))
+            .until(intake::getIntakeBreak)
+            .andThen(
+                Commands.parallel(
+                    intake.setintakePower(0.5),
+                    index.setIndexPower(0.7),
+                    claw.setClawPower(0.1),
+                    clawPivot.setClawPivotAngle(-0.058),
+                    intakePivot.setIntakePivotAngle(.2)))
             .until(claw::clawBroke)
             .andThen(
                 Commands.parallel(
                     intakePivot.setIntakePivotAngle(0),
-                    clawPivot.setClawPivotAngle(0.03))),
-        Commands.parallel(
-            intake.setintakePower(1),
-            intakePivot.setIntakePivotAngle(0.36))
-            .until(intake::getIntakeBreak),
-        intake::getIntakeBreak));
+                    clawPivot.setClawPivotAngle(0.03))));
+
+    
+
+    
     // Intake Trough
     intakeTrough.onTrue(
         Commands.parallel(

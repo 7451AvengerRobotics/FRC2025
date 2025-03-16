@@ -30,7 +30,10 @@ public class Elevator extends SubsystemBase {
 
         setName("Elevator");
 
+
         TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;

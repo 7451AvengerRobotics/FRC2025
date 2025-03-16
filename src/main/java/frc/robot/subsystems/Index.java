@@ -18,6 +18,8 @@ public class Index extends SubsystemBase {
         super();
         index = new TalonFX(IndexConstants.kIndexID);
         TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         StatusCode status = StatusCode.StatusCodeNotInitialized;

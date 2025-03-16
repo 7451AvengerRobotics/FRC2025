@@ -46,7 +46,7 @@ public class AutoRoutines {
                                         clawPivot::clawClear))),
                 Commands.parallel(
                         drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.66, -0.22),
+                                new Transform2d(new Translation2d(0.56, -0.18),
                                         new Rotation2d(0))),
                         clawPivot.setClawPivotAngle(-0.008).until(clawPivot::endCommand))
                         .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
@@ -195,7 +195,7 @@ public class AutoRoutines {
                                                         0.03))
                                                 .withTimeout(0.5))),
                 Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.72, -0.24), new Rotation2d(0))),
+                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
                         elevator.setElevatorPosition(5.5)
                                 .until(
                                         elevator::endCommand)
@@ -213,7 +213,7 @@ public class AutoRoutines {
                 clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
                 Commands.parallel(
                         drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, 0.18),
+                                new Transform2d(new Translation2d(0.52, 0.15),
                                         new Rotation2d(0))),
                         elevator.setElevatorPosition(1.9)
                                 .until(
@@ -246,7 +246,7 @@ public class AutoRoutines {
                                                         0.03))
                                                 .withTimeout(0.5))),
                 Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.69, -0.24), new Rotation2d(0))),
+                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
                         elevator.setElevatorPosition(5.5)
                                 .until(
                                         elevator::endCommand)
@@ -332,7 +332,7 @@ public class AutoRoutines {
                                                 .withTimeout(0.5))),
                 Commands.parallel(
                         drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, -0.18),
+                                new Transform2d(new Translation2d(0.52, 0.15),
                                         new Rotation2d(0))),
                         elevator.setElevatorPosition(1.9)
                                 .until(
@@ -340,6 +340,70 @@ public class AutoRoutines {
                                 .onlyIf(
                                         clawPivot::clawClear))
                         .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
+    }
+
+
+    public Command processorRedSide2L2Coral() {
+        return Commands.sequence(
+                drive.followPPPathCommand("InitialRightSide"),
+                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
+                Commands.parallel(
+                        elevator.setElevatorPosition(1.9)
+                                .until(
+                                        elevator::endCommand)
+                                .onlyIf(
+                                        clawPivot::clawClear))
+                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
+                Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
+                        intakePivot.setIntakePivotAngle(0),
+                        elevator.setElevatorPosition(0.0002),
+                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
+                                .parallel(
+                                        intake.setintakePower(1),
+                                        intakePivot.setIntakePivotAngle(0.36))
+                                .until(intake::getIntakeBreak))),
+                Commands.parallel(
+                        drive.followPPPathCommand("Reef5Path1"),
+                        Commands.parallel(
+                                intake.setintakePower(0.5),
+                                index.setIndexPower(0.7),
+                                claw.setClawPower(0.1),
+                                clawPivot.setClawPivotAngle(-0.058),
+                                intakePivot.setIntakePivotAngle(.2))
+                                .until(claw::clawBroke)
+                                .andThen(
+                                        Commands.parallel(
+                                                intakePivot.setIntakePivotAngle(
+                                                        0),
+                                                clawPivot.setClawPivotAngle(
+                                                        0.03))
+                                                .withTimeout(0.5))),
+                Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
+                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
+                        elevator.setElevatorPosition(5.5)
+                                .until(
+                                        elevator::endCommand)
+                                .onlyIf(
+                                        clawPivot::clawClear)
+                                .andThen(
+                                        clawPivot.setClawPivotAngle(-0.008)
+                                                .until(clawPivot::endCommand)))
+                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
+    }
+
+    public Command redTest() {
+        return Commands.sequence(
+        drive.followPPPathCommand("Initial Red"), 
+                // clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
+                Commands.parallel(
+        drive.driveToClosestReefScoringFaceWithTranslate(
+                new Transform2d(new Translation2d(0.52, -0.18),
+                        new Rotation2d(0))),
+        elevator.setElevatorPosition(1.9)
+                .until(
+                        elevator::endCommand)
+                .onlyIf(
+                        clawPivot::clawClear)));
     }
 
 }

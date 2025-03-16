@@ -5,8 +5,9 @@
   "pathFolders": [
     "Barge",
     "CenterPaths",
-    "ProcessorL2",
-    "Processor"
+    "Red Auto",
+    "Processor",
+    "ProcessorL2"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,

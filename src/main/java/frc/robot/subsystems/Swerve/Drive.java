@@ -91,7 +91,7 @@ public class Drive extends SubsystemBase {
 
   private final PIDController xController = new PIDController(4.0, 0.0, 0.0);
   private final PIDController yController = new PIDController(4.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(4, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(1, 0.0, 0.0);
 
   private boolean holonomicControllerActive = false;
   private Pose2d holonomicPoseTarget = new Pose2d();
@@ -133,7 +133,7 @@ public class Drive extends SubsystemBase {
         new PIDController(3.5, 0, 0),
         new PIDController(3.5, 0, 0),
         headingController,
-        new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6)));
+        new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)));
 
     SmartDashboard.putData("Field", m_field);
 
@@ -153,7 +153,17 @@ public class Drive extends SubsystemBase {
         new PPHolonomicDriveController(
             new PIDConstants(5, 0.0, 0.0), new PIDConstants(5, 0.0, 0.0)),
         PP_CONFIG,
-        () -> false,
+        () -> {
+          // Boolean supplier that controls when the path will be mirrored for the red alliance
+          // This will flip the path being followed to the red side of the field.
+          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+          var alliance = DriverStation.getAlliance();
+          if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+          }
+          return false;
+        },
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
@@ -523,11 +533,11 @@ public class Drive extends SubsystemBase {
   }
 
   public Command driveToClosestReefScoringFaceWithTranslate(Transform2d transform2d) {
-    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean()
-        ? Arrays.asList(FieldConstants.Reef.redReefs)
-        : Arrays.asList(FieldConstants.Reef.blueReefs);
+    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean() ? Arrays.asList(FieldConstants.Reef.redReefs)
+    : Arrays.asList(FieldConstants.Reef.blueReefs);
     return Commands.defer(
         () -> {
+
           final Pose2d currentPose = getPose();
           final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
           Pose2d drivePose = nearestCoralSide.plus(transform2d);

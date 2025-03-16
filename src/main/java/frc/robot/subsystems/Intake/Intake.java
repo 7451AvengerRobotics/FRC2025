@@ -1,5 +1,7 @@
 package frc.robot.subsystems.Intake;
 
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -13,7 +15,23 @@ public class Intake extends SubsystemBase {
     private final DigitalInput intakebreak = new DigitalInput(0);
 
     public Intake(){
+
+        
         super();
+
+        TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
+
+        StatusCode status = StatusCode.StatusCodeNotInitialized;
+        for (int i = 0; i < 5; ++i) {
+            status = intake.getConfigurator().apply(cfg);
+            if (status.isOK()) 
+            break;
+        }
+        if (!status.isOK()) {
+            System.out.println("Could not configure device. Error: " + status.toString());
+        }
 
         setName("Intake");
     }

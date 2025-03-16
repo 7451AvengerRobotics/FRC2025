@@ -28,6 +28,8 @@ public class IntakePivot extends SubsystemBase {
         setName("IntakePivot");
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = IntakeConstants.kIntakeGearRatio;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

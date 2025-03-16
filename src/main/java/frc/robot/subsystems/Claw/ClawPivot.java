@@ -27,6 +27,8 @@ public class ClawPivot extends SubsystemBase {
         setName("clawPivot");
         
         TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40;
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ClawConstants.kClawGearRatio;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
