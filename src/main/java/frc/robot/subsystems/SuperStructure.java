@@ -7,9 +7,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
+import frc.robot.subsystems.Climber.ClimberPos;
 import frc.robot.subsystems.Elevator.EleHeight;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
+import frc.robot.subsystems.Intake.IntakePivot.IntakePos;
 
 public class SuperStructure {
     private final Elevator ele;
@@ -114,10 +116,31 @@ public class SuperStructure {
             intake.setintakePower(0),
             clawPivot.pivotClaw(() -> PivotPos.RESET),
             Commands.parallel(
-                ele.toHeightCoral(() -> EleHeight.RESET),
-                climb.setClimberAngle(0)
+                climb.setClimberAngle(() -> ClimberPos.STOW),
+                ele.toHeightCoral(() -> EleHeight.RESET)
             ),
-            intakePivot.setIntakePivotAngle(0)
+            Commands.waitUntil(climb::endClimbCommand),
+            intakePivot.setIntakePos(() -> IntakePos.STOW)
+        );
+    }
+
+    public Command intake() {
+        return Commands.sequence(
+            Commands.parallel(
+                intake.setintakePower(1).until(intake::getIntakeBreak),
+                intakePivot.setIntakePos(()-> IntakePos.INTAKE)),
+            Commands.waitUntil(ele::getLimitSwitch),
+            clawPivot.pivotClaw(() -> PivotPos.INTAKE),
+            Commands.parallel(
+                    intake.setintakePower(0.5),
+                    index.setIndexPower(0.7),
+                    claw.setClawPower(0.1),
+                    intakePivot.setIntakePivotAngle(.2)
+            ).until(claw::clawBroke),
+            Commands.parallel(
+                    intakePivot.setIntakePivotAngle(0),
+                    clawPivot.setClawPivotAngle(0.03)
+            )
         );
     }
     
