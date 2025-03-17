@@ -172,6 +172,70 @@ public class SuperStructure {
             .onTrue(changeStateCmd(State.IDLE));
     }
 
+    private void configureStateActions() {
+        stateTrg_idle.onTrue(resetEverything());
+
+        stateTrg_intaking.onTrue(
+                Commands.sequence(
+                    intakePivot.setIntakePos(() -> IntakePos.INTAKE),
+                    intake.setintakePower(1)
+                )
+            );
+        
+        stateTrg_heldInIntake.onTrue(
+                Commands.sequence(
+                    intakePivot.setIntakePos(() -> IntakePos.INTAKE),
+                    intake.setintakePower(0)
+                ).until(trg_inIntake)
+            );
+        
+        stateTrg_intook.onTrue(
+            Commands.sequence(
+                intake.setintakePower(0.5),
+                index.setIndexPower(0.7),
+                claw.setClawPower(0.1),
+                clawPivot.pivotClaw(()-> PivotPos.INTAKE),
+                intakePivot.setIntakePos(()-> IntakePos.INTAKING)
+            ).until(trg_inClaw)
+        );
+
+        stateTrg_eleToL1.onTrue(
+            Commands.sequence(
+                ele.toHeightCoral(()-> EleHeight.L1)
+            )
+        );
+
+        stateTrg_eleToL2.onTrue(
+            Commands.sequence(
+                ele.toHeightCoral(()-> EleHeight.L2)
+            )
+        );
+
+        stateTrg_eleToL3.onTrue(
+            Commands.sequence(
+                ele.toHeightCoral(()-> EleHeight.L3)
+            )
+        );
+
+        stateTrg_eleToL4.onTrue(
+            Commands.sequence(
+                ele.toHeightCoral(()-> EleHeight.L4),
+                clawPivot.pivotClaw(() -> PivotPos.L4)
+            )
+        );
+
+        stateTrg_scoreReady.onTrue(
+            Commands.sequence(
+                clawPivot.setClawPivotAngle(PivotPos.L4.clawRotations - 0.2)
+            )
+        );
+        stateTrg_scoring.onTrue(
+            Commands.sequence(
+                claw.setClawPower(-0.1) 
+            )
+        );
+    }
+
     public enum State {
         IDLE(0, "idle"),
         INTAKING(1, "intaking"),

@@ -89,16 +89,12 @@ public class Elevator extends SubsystemBase {
         return false;
     }  
 
-    public Command setElevatorPosition(double rotations, EleHeight height) {
-        return run(() -> {
-            elevate(rotations);
-        }).until(() -> nearSetpoint(height));
+    public Command setElevatorPosition(EleHeight height) {
+        return setElevatorPosition(height.rotations).until(() -> nearSetpoint(height));
     }
 
-    public Command setElevatorPosition(double rotations, AlgaeHeight height) {
-        return run(() -> {
-            elevate(rotations);
-        }).until(() -> nearSetpoint(height));
+    public Command setElevatorPosition(AlgaeHeight height) {
+        return setElevatorPosition(height.rotations).until(() -> nearSetpoint(height));
     }
 
     public Command setElevatorPosition(double rotations) {
@@ -108,11 +104,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command toHeightCoral(Supplier<EleHeight> height) {
-        return setElevatorPosition(height.get().rotations, height.get());
+        return setElevatorPosition(height.get());
     }
 
     public Command toHeightAlgae(Supplier<AlgaeHeight> height) {
-        return setElevatorPosition(height.get().rotations, height.get());
+        return setElevatorPosition(height.get());
     }
 
     public boolean getLimitSwitch() {
