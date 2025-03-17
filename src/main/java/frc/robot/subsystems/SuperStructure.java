@@ -241,14 +241,11 @@ public class SuperStructure {
         return (changeStateCmd(State.IDLE));
     }
 
-    public Command forcetoHP() {
-        return (changeStateCmd(State.ELE_TO_HP));
-    }
     public Command forceStateToIntake() {
         return (changeStateCmd(State.INTAKING));
     }
    public Command forceShoot() {
-        return m_coral.score();
+        return claw.setClawPower(0.1);
     }
     public Command changeStateToScored() {
         return (changeStateCmd(State.SCORED));
