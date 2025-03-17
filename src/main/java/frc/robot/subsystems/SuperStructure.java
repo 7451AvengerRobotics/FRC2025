@@ -93,6 +93,7 @@ public class SuperStructure {
         trg_holdInIntake = new Trigger(ele::getLimitSwitch);
 
         configureStateTransitions();
+        configureStateActions();
 
     }
 
@@ -234,6 +235,35 @@ public class SuperStructure {
                 claw.setClawPower(-0.1) 
             )
         );
+    }
+
+    public Command forceIdle() {
+        return (changeStateCmd(State.IDLE));
+    }
+
+    public Command forcetoHP() {
+        return (changeStateCmd(State.ELE_TO_HP));
+    }
+    public Command forceStateToIntake() {
+        return (changeStateCmd(State.INTAKING));
+    }
+   public Command forceShoot() {
+        return m_coral.score();
+    }
+    public Command changeStateToScored() {
+        return (changeStateCmd(State.SCORED));
+    }
+    public Command forceL1() {
+        return (changeStateCmd(State.ELE_TO_L1));
+    }
+    public Command forceL2() {
+        return (changeStateCmd(State.ELE_TO_L2));
+    }
+    public Command forceL3() {
+        return (changeStateCmd(State.ELE_TO_L3));
+    }
+    public Command forceL4() {
+        return (changeStateCmd(State.ELE_TO_L4));
     }
 
     public enum State {
