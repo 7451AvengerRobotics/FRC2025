@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -77,10 +76,6 @@ public class Elevator extends SubsystemBase {
             elevator.getPosition(),
             elevator.getVelocity(),
             elevator.getMotorVoltage());
-
-        elevator.optimizeBusUtilization(); //make sure to remove after sysid
-
-        SignalLogger.start();
     }
 
     public void elevate(double rotations){
@@ -112,7 +107,7 @@ public class Elevator extends SubsystemBase {
         });
     }
 
-        public Command toHeightCoral(Supplier<EleHeight> height) {
+    public Command toHeightCoral(Supplier<EleHeight> height) {
         return setElevatorPosition(height.get().rotations, height.get());
     }
 

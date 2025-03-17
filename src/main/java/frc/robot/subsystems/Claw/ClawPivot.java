@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants.ClawConstants;
-import frc.robot.subsystems.Elevator.EleHeight;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -72,10 +71,8 @@ public class ClawPivot extends SubsystemBase {
         claw_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
     }
 
-    public Command setClawPivotAngle(double angle, PivotPos pos) {
-        return run(() -> {
-            pivot(angle);
-        }).until(() -> nearSetpoint(pos));
+    public Command setClawPivotAngle(PivotPos pos) {
+        return setClawPivotAngle(pos.clawRotations).until(() -> nearSetpoint(pos));
     }
 
     public Command setClawPivotAngle(double angle) {
@@ -85,7 +82,7 @@ public class ClawPivot extends SubsystemBase {
     }
 
     public Command pivotClaw(Supplier<PivotPos> pos) {
-        return setClawPivotAngle(pos.get().rotations, pos.get());
+        return setClawPivotAngle(pos.get());
 
     }
 
@@ -94,7 +91,7 @@ public class ClawPivot extends SubsystemBase {
     }
 
     public boolean nearSetpoint(PivotPos pivot) {
-        double diff = pivotRequest.Position - pivot.rotations;
+        double diff = pivotRequest.Position - pivot.clawRotations;
         return Math.abs(diff) <= 0.05;
     }
 
@@ -125,12 +122,13 @@ public class ClawPivot extends SubsystemBase {
         L4(-0.02),
         INTAKE(2),
         BARGE(5),
+        RESET(0),
         PROCESSOR(0);
 
-        public final double rotations;
+        public final double clawRotations;
 
-        private PivotPos(double rotations){
-            this.rotations = rotations;
+        private PivotPos(double clawRotations){
+            this.clawRotations = clawRotations;
         }
     }
 }

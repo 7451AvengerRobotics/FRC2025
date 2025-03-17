@@ -15,8 +15,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants.IntakeConstants;
-
 import static edu.wpi.first.units.Units.*;
+
+import java.util.function.Supplier;
 
 public class IntakePivot extends SubsystemBase {
 
@@ -75,12 +76,12 @@ public class IntakePivot extends SubsystemBase {
         });
     }
 
+    public Command setIntakePivotAngle(IntakePos pos) {
+        return this.setIntakePivotAngle(pos.intakeRotations).until(() -> nearSetpoint(pos));
+    }
 
-    public boolean atPos() {
-        if (intake_pivot.getPosition().getValueAsDouble() >= 0.05 && intake_pivot.getPosition().getValueAsDouble() >= 0.11) {
-            return true;
-        }
-        return false;
+    public Command setIntakePos(Supplier<IntakePos> pos) {
+        return setIntakePivotAngle(pos.get());
     }
 
     public boolean endCommand() {
@@ -90,8 +91,26 @@ public class IntakePivot extends SubsystemBase {
         return false;
     }
 
-        @Override
+    public boolean nearSetpoint(IntakePos pos) {
+        double diff = pivotRequest.Position - pos.intakeRotations;
+        return Math.abs(diff) <= 0.05;
+    } 
+
+    @Override
     public void periodic(){
         SmartDashboard.putNumber("Intake Rotations", intake_pivot.getPosition().getValueAsDouble());
-    }   
+    }
+    
+    public enum IntakePos {
+        L1(0.1),
+        INTAKING(0.25),
+        INTAKE(0.36),
+        STOW(0);
+
+        public final double intakeRotations;
+
+        private IntakePos(double intakeRotations){
+            this.intakeRotations = intakeRotations;
+        }
+    }
 }

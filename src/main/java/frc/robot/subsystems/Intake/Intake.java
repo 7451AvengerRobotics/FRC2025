@@ -54,13 +54,6 @@ public class Intake extends SubsystemBase {
             });
     }
 
-    public boolean raiseIntake() {
-        if (intake.getVelocity(true).getValueAsDouble() < 200 && intake.getSupplyCurrent(true).getValueAsDouble() > 100) {
-            return true;
-        }
-        return false;
-    }
-
 
     @Override
     public void periodic(){

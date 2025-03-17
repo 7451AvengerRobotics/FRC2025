@@ -2,8 +2,9 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -15,6 +16,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.Constants.RobotConstants.ClimberConstants;
+import frc.robot.subsystems.Elevator.EleHeight;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -66,8 +68,6 @@ public class Climber extends SubsystemBase {
             climber.getVelocity(),
             climber.getMotorVoltage());
 
-
-        SignalLogger.start();
     }
 
     public void runClimber(double power){
@@ -76,6 +76,11 @@ public class Climber extends SubsystemBase {
 
     public void setAngle(double angle){
         climber.setControl(climbRequest.withPosition(angle).withSlot(0));
+    }
+
+    public boolean nearSetpoint(ClimberPos pos) {
+        double diff = climbRequest.Position - pos.climbRotations;
+        return Math.abs(diff) <= 0.05;
     }
 
     public Command setClimberPower(double power) {
@@ -94,6 +99,14 @@ public class Climber extends SubsystemBase {
         });
     }
 
+    public Command setClimberAngle(ClimberPos pos) {
+        return setClimberAngle(pos.climbRotations).until(() -> nearSetpoint(pos));
+    }
+
+    public Command setClimberAngle(Supplier<ClimberPos> pos) {
+        return setClimberAngle(pos.get());
+    }
+
     public boolean endClimbCommand() {
         if (climber.getVelocity(true).getValueAsDouble() == 0.0 && climber.getPosition().getValueAsDouble() < 0.03) {
             return true;
@@ -110,8 +123,17 @@ public class Climber extends SubsystemBase {
 
     @Override
     public void periodic(){
-
         SmartDashboard.putNumber("Climber Rotations", climber.getPosition().getValueAsDouble());
+    }
 
+    public enum ClimberPos {
+        STOW(0),
+        READY(0.25),
+        CLIMBED(-0.25);
+        public final double climbRotations;
+
+        private ClimberPos(double climbRotations){
+            this.climbRotations = climbRotations;
+        }
     }
 }
