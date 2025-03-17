@@ -3,6 +3,7 @@ package frc.robot.subsystems.Swerve;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -154,11 +155,7 @@ public class Drive extends SubsystemBase {
             new PIDConstants(5, 0.0, 0.0), new PIDConstants(5, 0.0, 0.0)),
         PP_CONFIG,
         () -> {
-          // Boolean supplier that controls when the path will be mirrored for the red alliance
-          // This will flip the path being followed to the red side of the field.
-          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-          var alliance = DriverStation.getAlliance();
+          var alliance =  DriverStation.getAlliance();
           if (alliance.isPresent()) {
             return alliance.get() == DriverStation.Alliance.Red;
           }
@@ -188,11 +185,11 @@ public class Drive extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (AllianceFlipUtil.shouldFlip()) {
-      m_field.setRobotPose(AllianceFlipUtil.apply(getPose()));
-    } else {
-      m_field.setRobotPose(getPose());
-    }
+    // if (AllianceFlipUtil.shouldFlip()) {
+    //   m_field.setRobotPose(AllianceFlipUtil.apply(getPose()));
+    // } else {
+    //   m_field.setRobotPose(getPose());
+    // }
 
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
@@ -465,28 +462,35 @@ public class Drive extends SubsystemBase {
   }
 
   public Command followPPPathCommand(String pathName) {
-    try {
-      // Load the path you want to follow using its name in the GUI
-      PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-      PathPlannerPath finalPath;
-              
-      if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-          finalPath = path.flipPath();
-      }
-      else {
-          finalPath = path;
-      }
-      
-      
+    return Commands.defer(
+      () -> {
+        try {
+          // Load the path you want to follow using its name in the GUI
+          PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+           PathPlannerPath finalPath;
+                  
+          // if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
+          //     finalPath = path.flipPath();
+          // }
+          // else {
+          //     finalPath = path;
+          // }
 
-      // Create a path following command using AutoBuilder. This will also trigger
-      // event markers.
-      return AutoBuilder.followPath(finalPath).alongWith(AutoBuilder.resetOdom(finalPath.getStartingHolonomicPose().get()));
-    } catch (Exception e) {
-      DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
-      return Commands.none();
-    }
-
+          Pose2d startingPose = path.getStartingHolonomicPose().get();
+          
+          Logger.recordOutput("Inital Pose", startingPose);
+          
+    
+          // Create a path following command using AutoBuilder. This will also trigger
+          // event markers.
+          return AutoBuilder.resetOdom(startingPose).andThen(AutoBuilder.followPath(path));
+        } catch (Exception e) {
+          DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+          return Commands.none();
+        }
+      },
+      Set.of(this)
+    );
   }
 
   public Command driveRight() {

@@ -208,8 +208,8 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -controller.getLeftY() * 0.7,
-            () -> -controller.getLeftX() * 0.7,
+            () -> -controller.getLeftY() * 0.85,
+            () -> -controller.getLeftX() * 0.85,
             () -> -controller.getRightX() * 0.7));
 
     // Switch to X pattern when X button is pressed
