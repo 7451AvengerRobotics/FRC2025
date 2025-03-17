@@ -19,6 +19,8 @@ import frc.robot.subsystems.Elevator.EleHeight;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 public class ClawPivot extends SubsystemBase {
 
     private final TalonFX claw_pivot = new TalonFX(ClawConstants.kClawPivotID);
@@ -80,6 +82,11 @@ public class ClawPivot extends SubsystemBase {
         return run(() -> {
             pivot(angle);
         });
+    }
+
+    public Command pivotClaw(Supplier<PivotPos> pos) {
+        return setClawPivotAngle(pos.get().rotations, pos.get());
+
     }
 
     public double getClawPivotPosition() {

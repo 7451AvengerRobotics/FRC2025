@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
@@ -98,10 +100,24 @@ public class Elevator extends SubsystemBase {
         }).until(() -> nearSetpoint(height));
     }
 
+    public Command setElevatorPosition(double rotations, AlgaeHeight height) {
+        return run(() -> {
+            elevate(rotations);
+        }).until(() -> nearSetpoint(height));
+    }
+
     public Command setElevatorPosition(double rotations) {
         return run(() -> {
             elevate(rotations);
         });
+    }
+
+        public Command toHeightCoral(Supplier<EleHeight> height) {
+        return setElevatorPosition(height.get().rotations, height.get());
+    }
+
+    public Command toHeightAlgae(Supplier<AlgaeHeight> height) {
+        return setElevatorPosition(height.get().rotations, height.get());
     }
 
     public boolean getLimitSwitch() {
@@ -113,6 +129,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean nearSetpoint(EleHeight height) {
+        double diff = elevatorRequest.Position - height.rotations;
+        return Math.abs(diff) <= 0.05;
+    }
+
+    public boolean nearSetpoint(AlgaeHeight height) {
         double diff = elevatorRequest.Position - height.rotations;
         return Math.abs(diff) <= 0.05;
     }
