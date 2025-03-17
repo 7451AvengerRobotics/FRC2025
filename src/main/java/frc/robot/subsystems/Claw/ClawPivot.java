@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants.ClawConstants;
+import frc.robot.subsystems.Elevator.EleHeight;
+
 import static edu.wpi.first.units.Units.*;
 
 public class ClawPivot extends SubsystemBase {
@@ -68,14 +70,19 @@ public class ClawPivot extends SubsystemBase {
         claw_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
     }
 
-    public Command setClawPivotAngle(double angle) {
+    public Command setClawPivotAngle(double angle, PivotPos pos) {
         return run(() -> {
             pivot(angle);
-        });
+        }).until(() -> nearSetpoint(pos));
     }
 
     public double getClawPivotPosition() {
         return claw_pivot.getPosition().getValueAsDouble();
+    }
+
+    public boolean nearSetpoint(PivotPos pivot) {
+        double diff = pivotRequest.Position - pivot.rotations;
+        return Math.abs(diff) <= 0.05;
     }
 
     public boolean clawClear() {
@@ -98,4 +105,19 @@ public class ClawPivot extends SubsystemBase {
         SmartDashboard.putNumber("Claw Rotations", claw_pivot.getPosition().getValueAsDouble());
     }
     
+
+    public enum PivotPos {
+        L2(6.75097),
+        L3(9.529046 - 0.17),
+        L4(-0.02),
+        INTAKE(2),
+        BARGE(5),
+        PROCESSOR(0);
+
+        public final double rotations;
+
+        private PivotPos(double rotations){
+            this.rotations = rotations;
+        }
+    }
 }

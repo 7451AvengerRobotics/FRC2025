@@ -90,21 +90,12 @@ public class Elevator extends SubsystemBase {
             return true;
         }
         return false;
-    }
+    }  
 
-    // public void reset() {
-    //     if (getLimitSwitch()) {
-    //         elevator.getConfigurator().setPosition(0);
-    //     }
-    // }
-
-    
-
-    public Command setElevatorPosition(double rotations) {
+    public Command setElevatorPosition(double rotations, EleHeight height) {
         return run(() -> {
             elevate(rotations);
-            //reset();
-        });
+        }).until(() -> nearSetpoint(height));
     }
 
     public boolean getLimitSwitch() {
@@ -115,10 +106,42 @@ public class Elevator extends SubsystemBase {
         return (elevator.getPosition().getValueAsDouble() < 0.1) && elevator.getVelocity(true).getValueAsDouble() == 0.0;
     }
 
+    public boolean nearSetpoint(EleHeight height) {
+        double diff = elevatorRequest.Position - height.rotations;
+        return Math.abs(diff) <= 0.05;
+    }
+
     @Override
     public void periodic(){
 
         SmartDashboard.putNumber("Elevator Rotations", elevator.getPosition().getValueAsDouble());
         SmartDashboard.putBoolean("limit Switch", getLimitSwitch());
+    }
+
+    public enum EleHeight {
+        RESET(0.1),
+        L1(5.590325),
+        L2(5.653564 + 0.169),
+        L3(8.451660 + (0.169 / 2)),
+        L4(12.89);
+
+        public final double rotations;
+
+        private EleHeight(double rotations){
+            this.rotations = rotations;
+        }
+    }
+
+    public enum AlgaeHeight {
+        L2(6.75097),
+        L3(9.529046 - 0.17),
+        BARGE(5),
+        PROCESSOR(0);
+
+        public final double rotations;
+
+        private AlgaeHeight(double rotations){
+            this.rotations = rotations;
+        }
     }
 }
