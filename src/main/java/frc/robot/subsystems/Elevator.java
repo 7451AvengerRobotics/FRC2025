@@ -98,6 +98,12 @@ public class Elevator extends SubsystemBase {
         }).until(() -> nearSetpoint(height));
     }
 
+    public Command setElevatorPosition(double rotations) {
+        return run(() -> {
+            elevate(rotations);
+        });
+    }
+
     public boolean getLimitSwitch() {
         return !limitSwitch.get();
     }

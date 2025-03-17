@@ -76,6 +76,12 @@ public class ClawPivot extends SubsystemBase {
         }).until(() -> nearSetpoint(pos));
     }
 
+    public Command setClawPivotAngle(double angle) {
+        return run(() -> {
+            pivot(angle);
+        });
+    }
+
     public double getClawPivotPosition() {
         return claw_pivot.getPosition().getValueAsDouble();
     }
