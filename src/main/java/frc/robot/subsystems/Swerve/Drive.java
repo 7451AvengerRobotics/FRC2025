@@ -314,10 +314,6 @@ public class Drive extends SubsystemBase {
       } 
     }
   
-  private void resetPose(final Pose2d robotPose) {
-      poseEstimator.resetPosition(getGyroRotation(), getModulePositions(), robotPose);
-  }
-  
 
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return run(() -> runCharacterization(0.0))
@@ -465,20 +461,11 @@ public class Drive extends SubsystemBase {
         try {
           // Load the path you want to follow using its name in the GUI
           PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-           PathPlannerPath finalPath;
-                  
-          // if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) {
-          //     finalPath = path.flipPath();
-          // }
-          // else {
-          //     finalPath = path;
-          // }
 
           Pose2d startingPose = path.getStartingHolonomicPose().get();
           
           Logger.recordOutput("Inital Pose", startingPose);
           
-    
           // Create a path following command using AutoBuilder. This will also trigger
           // event markers.
           return AutoBuilder.resetOdom(startingPose).andThen(AutoBuilder.followPath(path));

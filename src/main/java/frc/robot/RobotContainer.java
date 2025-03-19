@@ -56,6 +56,7 @@ public class RobotContainer {
   private final Vision vision;
   private final Drive drive;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
+  private final CommandPS5Controller manip = new CommandPS5Controller(2);
   private final Joystick buttonPannel = new Joystick(0);
   private final SendableChooser<Command> autoChooser1;
   private final AutoRoutines autos;
@@ -69,18 +70,11 @@ public class RobotContainer {
   private final Index index = new Index();
   private final LedHandler led = new LedHandler();
   private final Climber climb = new Climber();
-  JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
   JoystickButton intakeTrough = new JoystickButton(buttonPannel, ButtonConstants.intakeTrough);
   JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
   JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
   JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
   JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
-  JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
-  JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
-  JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
-  JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
-  JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
-  JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
 
   Trigger L2req = new Trigger(L2::getAsBoolean);
   Trigger L3req = new Trigger(L3::getAsBoolean);
@@ -121,13 +115,7 @@ public class RobotContainer {
             elevator, 
             clawPivot, 
             claw, 
-            climb, 
-            controller.R2(), 
-            L1req, 
-            L1req,
-            L3req, 
-            L4req, 
-            scoreReq
+            climb
         );
 
         break;
@@ -146,20 +134,14 @@ public class RobotContainer {
             new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d,
                 drive::getPose));
 
-                superStructure = new SuperStructure(
+        superStructure = new SuperStructure(
             intake, 
             intakePivot, 
             index, 
             elevator, 
             clawPivot, 
             claw, 
-            climb, 
-            controller.R2(), 
-            L1req, 
-            L1req,
-            L3req, 
-            L4req, 
-            scoreReq
+            climb
         );
         break;
 
@@ -190,13 +172,7 @@ public class RobotContainer {
             elevator, 
             clawPivot, 
             claw, 
-            climb, 
-            controller.R2(), 
-            L1req, 
-            L1req,
-            L3req, 
-            L4req, 
-            scoreReq
+            climb
         );
 
         break;
@@ -242,38 +218,11 @@ public class RobotContainer {
     controller.PS().and(controller.touchpad()).onTrue(
         Commands.runOnce(
             drive::stopWithX,
-            drive));
-
-    controller.options().onTrue(clawPivot.setClawPivotAngle(-0.061));
-
-    // Drive Commands
-    controller.R1().whileTrue(
-        Commands.parallel(
-            drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
-            superStructure.forceL1().until(superStructure.stateTrg_scoreReady)
-        ).andThen(superStructure.forceShoot())
-    ).onFalse(
-        superStructure.forceIdle()
+            drive
+        )
     );
 
-
-
-    controller.L1().whileTrue(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())));
-
-    controller.touchpad().whileTrue(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.48, 0), new Rotation2d(0))));
-
-    processor.whileTrue(Commands.parallel(
-        drive.driveToPose(
-            FieldConstants.Processor.centerFace.plus(new Transform2d(new Translation2d(0.58, 0), new Rotation2d(0))))));
-
-    intakeAlgae.whileTrue(claw.setClawPower(0.5));
-
-    // Reset gyro to 0° when B button is pressed
-    controller.square().onTrue(
+    controller.options().and(controller.PS()).onTrue(
         Commands.runOnce(
             () -> drive.setPose(
                 new Pose2d(
@@ -281,114 +230,46 @@ public class RobotContainer {
                     new Rotation2d())),
             drive)
             .ignoringDisable(true));
-
-    // Score or Suck
-    controller.L2().whileTrue((claw.setClawPower(0.4)));
-
-    // Climber One
-    controller.povDown().onTrue(
-        Commands.parallel(
-            intakePivot.setIntakePivotAngle(0.36),
-            clawPivot.setClawPivotAngle(0),
-            climb.setClimberAngle(-0.22)));
-    controller.povUp().whileTrue(
-        Commands.parallel(
-            clawPivot.setClawPivotAngle(0),
-            climb.setClimberPower(0.37)
-                .until(climb::endClimbSeq)));
-
-    // L1 - L4
-    // L1.whileTrue(
-    //     Commands.parallel(
-    //         intakePivot.setIntakePivotAngle(0.15)
-    //             .until(
-    //                 intakePivot::endCommand)
-    //             .andThen(
-    //                 intake.setintakePower(-0.23))));
-
-    L2.onTrue(
-        (elevator.setElevatorPosition(1.9)
-            .onlyIf(
-                clawPivot::clawClear)));
-
-    blueReef.onTrue(Commands.parallel(elevator.setElevatorPosition(1.4), clawPivot.setClawPivotAngle(0.09)));
-    greenReef.onTrue(Commands.parallel(elevator.setElevatorPosition(3), clawPivot.setClawPivotAngle(0.09)));
-
-    L3.onTrue(
-        (elevator.setElevatorPosition(3.35)
-            .onlyIf(
-                clawPivot::clawClear)));
-
-    L4.onTrue(
-        elevator.setElevatorPosition(5.5)
-            .until(
-                elevator::endCommand)
-            .onlyIf(
-                clawPivot::clawClear)
-            .andThen(
-                clawPivot.setClawPivotAngle(-0.008)));
-
-    yellowReef.whileTrue(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.56, 0.15), new Rotation2d(0))));
-
-    whiteReef.whileTrue(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))));
-
-    redReef.onTrue(
-        Commands.parallel(
-            intake.setintakePower(-0.5),
-            index.setIndexPower(-0.7),
-            claw.setClawPower(0.1),
-            clawPivot.setClawPivotAngle(0.03),
-            intakePivot.setIntakePivotAngle(.2)).withTimeout(0.5)
-            .andThen(
-                Commands.parallel(
-                    intake.setintakePower(0.5),
-                    index.setIndexPower(0.7),
-                    claw.setClawPower(0.2),
-                    clawPivot.setClawPivotAngle(-0.06)))
-            .until(claw::clawBroke));
-    // Reset
-    reset.onTrue(
-        climb.setClimberAngle(0)
-            .until(
-                climb::endClimbCommand)
-            .andThen(
-                Commands.parallel(
-                    intakePivot.setIntakePivotAngle(0.06),
-                    elevator.setElevatorPosition(0.0002),
-                    clawPivot.setClawPivotAngle(0.03))));
-
-    // Intake All
-    controller.R2().onTrue(
-        Commands.parallel(
-            intake.setintakePower(1),
-            intakePivot.setIntakePivotAngle(0.36))
-            .until(intake::getIntakeBreak)
-            .andThen(
-                Commands.parallel(
-                    intake.setintakePower(0.5),
-                    index.setIndexPower(0.7),
-                    claw.setClawPower(0.1),
-                    clawPivot.setClawPivotAngle(-0.058),
-                    intakePivot.setIntakePivotAngle(.2)))
-            .until(claw::clawBroke)
-            .andThen(
-                Commands.parallel(
-                    intakePivot.setIntakePivotAngle(0),
-                    clawPivot.setClawPivotAngle(0.03))));
-
     
+    controller.R1().whileTrue(
+        Commands.sequence(
+            Commands.parallel(
+                drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
+                superStructure.setReefLvl(manip)
+            ),
+            Commands.waitUntil(manip.touchpad()),
+            superStructure.score()
+        )
+    ).onFalse(
+        superStructure.resetEverything()
+    );
 
-    
-    // Intake Trough
-    intakeTrough.onTrue(
-        Commands.parallel(
-            intakePivot.setIntakePivotAngle(0.38),
-            intake.setintakePower(0.7))
-            .until(intake::getIntakeBreak));
+    controller.L1().whileTrue(
+        Commands.sequence(
+            Commands.parallel(
+                drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())
+                ),
+                superStructure.setReefLvl(manip)
+            ),
+            Commands.waitUntil(manip.touchpad()),
+            superStructure.score()
+        )
+    ).onFalse(
+        superStructure.resetEverything()
+    );
+
+    controller.touchpad().whileTrue(
+        Commands.sequence(
+            Commands.parallel(
+                drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(new Translation2d(0.48, 0), new Rotation2d(0))
+                ),
+                superStructure.setReefLvl(manip)
+            )
+        )
+    );
 
   }
 
@@ -399,22 +280,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser1.getSelected();
-  }
-
-  public boolean axis1ThresholdGreatererThanPoint5() {
-    return buttonPannel.getRawAxis(1) > .5;
-  }
-
-  public boolean axis0ThresholdGreatererThanPoint5() {
-    return buttonPannel.getRawAxis(0) > 0;
-  }
-
-  public boolean axis0ThresholdLessThanPoint5() {
-    return buttonPannel.getRawAxis(0) < 0;
-  }
-
-  public boolean axis1ThresholdLessThanPoint5() {
-    return buttonPannel.getRawAxis(1) < .5;
   }
 
   public void configAutos() {

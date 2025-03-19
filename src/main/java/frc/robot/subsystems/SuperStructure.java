@@ -1,14 +1,13 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
 import frc.robot.subsystems.Climber.ClimberPos;
+import frc.robot.subsystems.Elevator.AlgaeHeight;
 import frc.robot.subsystems.Elevator.EleHeight;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
@@ -23,38 +22,6 @@ public class SuperStructure {
     private final Climber climb;
     private final Index index;
 
-    public final EventLoop stateEventLoop = new EventLoop();
-
-    private State m_state = State.IDLE;
-
-    private final Trigger trg_teleopL1Req; 
-    private final Trigger trg_teleopL2Req; 
-    private final Trigger trg_teleopL3Req; 
-    private final Trigger trg_teleopL4Req; 
-    private final Trigger trg_teleopScoreReq;
-    private final Trigger trg_intakeTrigger;
-
-    public final Trigger stateTrg_idle = new Trigger(stateEventLoop, () -> m_state == State.IDLE);
-    public final Trigger stateTrg_intaking = new Trigger(stateEventLoop, () -> m_state == State.INTAKING);
-    public final Trigger stateTrg_heldInIntake = new Trigger(stateEventLoop, () -> m_state == State.ININTAKE);
-    public final Trigger stateTrg_intook = new Trigger(stateEventLoop, () -> m_state == State.INTOOK);
-    public final Trigger stateTrg_eleToL1 = new Trigger(stateEventLoop, () -> m_state == State.ELE_TO_L1);
-    public final Trigger stateTrg_eleToL2 = new Trigger(stateEventLoop, () -> m_state == State.ELE_TO_L2);
-    public final Trigger stateTrg_eleToL3 = new Trigger(stateEventLoop, () -> m_state == State.ELE_TO_L3);
-    public final Trigger stateTrg_eleToL4 = new Trigger(stateEventLoop, () -> m_state == State.ELE_TO_L4);
-    public final Trigger stateTrg_scoreReady = new Trigger(stateEventLoop, () -> m_state == State.SCORE_READY);
-    public final Trigger stateTrg_scoring = new Trigger(stateEventLoop, () -> m_state == State.SCORING);
-    public final Trigger stateTrg_scored = new Trigger(stateEventLoop, () -> m_state == State.SCORED);
-
-    public final Trigger stateTrg_climbReady = new Trigger(stateEventLoop, () -> m_state == State.CLIMB_READY);
-    public final Trigger stateTrg_climbing = new Trigger(stateEventLoop, () -> m_state == State.CLIMBING);
-    public final Trigger stateTrg_climbed = new Trigger(stateEventLoop, () -> m_state == State.CLIMBED);
-    private final Trigger trg_hasCoral;
-    private final Trigger trg_inIntake;
-    private final Trigger trg_inClaw;
-    private final Trigger trg_readyToScore;
-    private final Trigger trg_holdInIntake;
-
 
 
     public SuperStructure(
@@ -64,13 +31,7 @@ public class SuperStructure {
         Elevator ele,
         ClawPivot clawPivot,
         Claw claw,
-        Climber climb,
-        Trigger IntakeReq,
-        Trigger L1Req,
-        Trigger L2Req,
-        Trigger L3Req,
-        Trigger L4Req,
-        Trigger scoreReq
+        Climber climb
     ) {
         this.intake = intake;
         this.intakePivot = intakePivot;
@@ -79,22 +40,6 @@ public class SuperStructure {
         this.clawPivot = clawPivot;
         this.claw = claw;
         this.climb = climb;
-
-        trg_intakeTrigger = IntakeReq;
-        trg_teleopL1Req = L1Req;
-        trg_teleopL2Req = L2Req;
-        trg_teleopL3Req = L3Req;
-        trg_teleopL4Req = L4Req;
-        trg_teleopScoreReq = scoreReq;
-        trg_inIntake = new Trigger(intake::getIntakeBreak);
-        trg_inClaw = new Trigger(claw::clawBroke);
-        trg_hasCoral = trg_inIntake.or(trg_inClaw);
-        trg_readyToScore = new Trigger(ele::endCommand).and(clawPivot::endCommand);
-        trg_holdInIntake = new Trigger(ele::getLimitSwitch);
-
-        configureStateTransitions();
-        configureStateActions();
-
     }
 
     /* methods that Actually Do Things */
@@ -118,7 +63,8 @@ public class SuperStructure {
         return Commands.sequence(
             Commands.parallel(
                 intake.setintakePower(1).until(intake::getIntakeBreak),
-                intakePivot.setIntakePos(()-> IntakePos.INTAKE)),
+                intakePivot.setIntakePos(()-> IntakePos.INTAKE)
+            ),
             Commands.waitUntil(ele::getLimitSwitch),
             clawPivot.pivotClaw(() -> PivotPos.INTAKE),
             Commands.parallel(
@@ -161,168 +107,94 @@ public class SuperStructure {
         );
     }
 
+    public Command setL2Algae() {            
+        return Commands.sequence(
+            ele.toHeightAlgae(()-> AlgaeHeight.L2),
+            clawPivot.pivotClaw(() -> PivotPos.L2)
+        );
+    }
+
+    public Command setL3Algae() {            
+        return Commands.sequence(
+            ele.toHeightAlgae(()-> AlgaeHeight.L3),
+            clawPivot.pivotClaw(() -> PivotPos.L2)
+        );
+    }
+
+    public Command setBargeAlgae() {            
+        return Commands.sequence(
+            ele.toHeightAlgae(()-> AlgaeHeight.BARGE),
+            clawPivot.pivotClaw(() -> PivotPos.L2)
+        );
+    }
+
+    public Command setProcessor() {            
+        return Commands.sequence(
+            ele.toHeightAlgae(()-> AlgaeHeight.PROCESSOR),
+            clawPivot.pivotClaw(() -> PivotPos.L2)
+        );
+    }
+
     public Command setL1() {            
         return Commands.sequence(
             ele.toHeightCoral(()-> EleHeight.L1)
         );
     }
 
-    public Command intakePreEle() {
-    return Commands.sequence(
-        intake.setintakePower(0.5),
-        index.setIndexPower(0.7),
-        claw.setClawPower(0.1),
-        clawPivot.pivotClaw(()-> PivotPos.INTAKE),
-        intakePivot.setIntakePos(()-> IntakePos.INTAKING)
-        ).until(trg_inClaw);
-    }
-
-    private Command changeStateCmd(State newState) {
-        return Commands.runOnce(() -> {
-            if (newState == m_state) {
-                return;
+    public Command setReefLvl(CommandPS5Controller controller) {
+        final int povPosition = controller.getHID().getPOV();
+        Command reefPosition = setL4();
+            if (povPosition == 0) {
+                reefPosition = setL4();
+            } else if (povPosition == 90) {
+                reefPosition = setL3();
+            } else if (povPosition == 180) {
+                reefPosition = setL2();
+            } else if (povPosition == 270) {
+                reefPosition = setL1();
             }
-            m_state = newState;
-        });
+            return Commands.sequence(
+                Commands.waitUntil(claw::clawBroke),
+                Commands.waitUntil(clawPivot::clawClear),
+                reefPosition
+            );
     }
 
-    private void configureStateTransitions() {
-        (stateTrg_idle.and(trg_intakeTrigger).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.INTAKING));
-        (stateTrg_intaking.and(trg_intakeTrigger).and(trg_holdInIntake.negate()).and(trg_inIntake).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.ININTAKE));
-        (stateTrg_heldInIntake.and(trg_inIntake).and(trg_holdInIntake))
-            .onTrue(changeStateCmd(State.INTOOK));
-        (trg_inClaw.and(trg_teleopL1Req).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.ELE_TO_L1));
-        (trg_inClaw.and(trg_teleopL2Req).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.ELE_TO_L2));
-        ((trg_inClaw).and(trg_teleopL3Req).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.ELE_TO_L3));
-        (trg_hasCoral.and(trg_teleopL4Req).and(RobotModeTriggers.teleop()))
-            .onTrue(changeStateCmd(State.ELE_TO_L4));
-        (stateTrg_eleToL1.and(trg_readyToScore))
-            .onTrue(changeStateCmd(State.SCORE_READY)); 
-        (stateTrg_eleToL2.and(trg_readyToScore))
-            .onTrue(changeStateCmd(State.SCORE_READY)); 
-        (stateTrg_eleToL3.and(trg_readyToScore))
-            .onTrue(changeStateCmd(State.SCORE_READY)); 
-        (stateTrg_eleToL4.and(trg_readyToScore))
-            .onTrue(changeStateCmd(State.SCORE_READY)); 
-        (stateTrg_scoreReady.and(trg_teleopScoreReq).and(RobotModeTriggers.teleop())) 
-            .onTrue(changeStateCmd(State.SCORING));
-        (stateTrg_scoring.and(trg_inClaw.negate())) 
-            .onTrue(changeStateCmd(State.SCORED));
-        (stateTrg_scored.debounce(0.05))
-            .onTrue(changeStateCmd(State.IDLE));
+    public Command setAlgaeLvl(CommandPS5Controller controller) {
+        final int povPosition = controller.getHID().getPOV();
+        Command reefPosition = setProcessor();
+            if (povPosition == 0) {
+                reefPosition = setBargeAlgae();
+            } else if (povPosition == 90) {
+                reefPosition = setL3Algae();
+            } else if (povPosition == 180) {
+                reefPosition = setL2Algae();
+            } else if (povPosition == 270) {
+                reefPosition = setProcessor();
+            }
+            return Commands.sequence(
+                Commands.waitUntil(claw::clawBroke),
+                Commands.waitUntil(clawPivot::clawClear),
+                reefPosition
+            );
     }
 
-    private void configureStateActions() {
-        stateTrg_idle.onTrue(resetEverything());
+    public Command readyToClimb() {
+        return Commands.parallel(
+            intakePivot.setIntakePivotAngle(0.36),
+            clawPivot.setClawPivotAngle(0),
+            climb.setClimberAngle(-0.22)
+        );
+    }
 
-        stateTrg_intaking.onTrue(
-                Commands.sequence(
-                    intakePivot.setIntakePos(() -> IntakePos.INTAKE),
-                    intake.setintakePower(1)
+    public Command climb() {
+        return Commands.parallel(
+            clawPivot.setClawPivotAngle(0),
+            climb.setClimberPower(0.37)
+                .until(climb::endClimbSeq).finallyDo(
+                    () -> climb.setAngle(-0.25)
                 )
-            );
-        
-        stateTrg_heldInIntake.onTrue(
-                Commands.sequence(
-                    intakePivot.setIntakePos(() -> IntakePos.INTAKE),
-                    intake.setintakePower(0)
-                ).until(trg_inIntake)
-            );
-        
-        stateTrg_intook.onTrue(
-            intakePreEle()
         );
-
-        stateTrg_eleToL1.onTrue(
-            Commands.sequence(
-                setL1()
-            )
-        );
-
-        stateTrg_eleToL2.onTrue(
-            Commands.sequence(
-                setL2()
-            )
-        );
-
-        stateTrg_eleToL3.onTrue(
-            Commands.sequence(
-                setL3()
-            )
-        );
-
-        stateTrg_eleToL4.onTrue(
-            setL4()
-        );
-
-        stateTrg_scoreReady.onTrue(
-            Commands.sequence(
-                clawPivot.setClawPivotAngle(PivotPos.L4.clawRotations - 0.2)
-            )
-        );
-        stateTrg_scoring.onTrue(
-            score()
-        );
-    }
-
-    public Command forceIdle() {
-        return (changeStateCmd(State.IDLE));
-    }
-
-    public Command forceStateToIntake() {
-        return (changeStateCmd(State.INTAKING));
-    }
-   public Command forceShoot() {
-        return claw.setClawPower(0.1);
-    }
-    public Command changeStateToScored() {
-        return (changeStateCmd(State.SCORED));
-    }
-    public Command forceL1() {
-        return (changeStateCmd(State.ELE_TO_L1));
-    }
-    public Command forceL2() {
-        return (changeStateCmd(State.ELE_TO_L2));
-    }
-    public Command forceL3() {
-        return (changeStateCmd(State.ELE_TO_L3));
-    }
-    public Command forceL4() {
-        return (changeStateCmd(State.ELE_TO_L4));
-    }
-
-    public void periodic() {
-        stateEventLoop.poll();
-    }
-
-    public enum State {
-        IDLE(0, "idle"),
-        INTAKING(1, "intaking"),
-        ININTAKE(1.1, "In the Intake"),
-        INTOOK(2, "intook"),
-        ELE_TO_L1(3.1, "ele to L1"),
-        ELE_TO_L2(3.2, "ele to L2"),
-        ELE_TO_L3(3.3, "ele to L3"),
-        ELE_TO_L4(3.4, "ele to L4"),
-        SCORE_READY(4, "score ready"),
-        SCORING(5, "scoring"),
-        SCORED(6, "scored"),
-        CLIMB_READY(7, "climb ready"),
-        CLIMBING(8, "climbing"),
-        CLIMBED(9, "climbed");
-
-        public final double idx;
-        public final String name;
-  
-        private State(double index, String _name) {
-            idx = index;
-            name = _name;
-        }
     }
 }
 
