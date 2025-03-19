@@ -103,12 +103,13 @@ public class SuperStructure {
             claw.setClawPower(0),
             index.setIndexPower(0),
             intake.setintakePower(0),
-            clawPivot.pivotClaw(() -> PivotPos.RESET),
             Commands.parallel(
                 climb.setClimberAngle(() -> ClimberPos.STOW),
                 ele.toHeightCoral(() -> EleHeight.RESET)
             ),
-            Commands.waitUntil(climb::endClimbCommand),
+            Commands.waitUntil(ele::getLimitSwitch),
+            clawPivot.pivotClaw(() -> PivotPos.RESET),
+            Commands.waitUntil(climb::endClimbCommand),//Change to elevator safe zone
             intakePivot.setIntakePos(() -> IntakePos.STOW)
         );
     }
@@ -131,6 +132,49 @@ public class SuperStructure {
                     clawPivot.setClawPivotAngle(0.03)
             )
         );
+    }
+
+    public Command score() {
+        return Commands.sequence(
+                claw.setClawPower(-0.1) 
+            );
+    }
+
+    public Command setL4() {            
+        return Commands.sequence(
+            ele.toHeightCoral(()-> EleHeight.L4),
+            clawPivot.pivotClaw(() -> PivotPos.L4)
+        );
+    }
+
+    public Command setL3() {            
+        return Commands.sequence(
+            ele.toHeightCoral(()-> EleHeight.L3),
+            clawPivot.pivotClaw(() -> PivotPos.L3)
+        );
+    }
+
+    public Command setL2() {            
+        return Commands.sequence(
+            ele.toHeightCoral(()-> EleHeight.L2),
+            clawPivot.pivotClaw(() -> PivotPos.L2)
+        );
+    }
+
+    public Command setL1() {            
+        return Commands.sequence(
+            ele.toHeightCoral(()-> EleHeight.L1)
+        );
+    }
+
+    public Command intakePreEle() {
+    return Commands.sequence(
+        intake.setintakePower(0.5),
+        index.setIndexPower(0.7),
+        claw.setClawPower(0.1),
+        clawPivot.pivotClaw(()-> PivotPos.INTAKE),
+        intakePivot.setIntakePos(()-> IntakePos.INTAKING)
+        ).until(trg_inClaw);
     }
 
     private Command changeStateCmd(State newState) {
@@ -191,38 +235,29 @@ public class SuperStructure {
             );
         
         stateTrg_intook.onTrue(
-            Commands.sequence(
-                intake.setintakePower(0.5),
-                index.setIndexPower(0.7),
-                claw.setClawPower(0.1),
-                clawPivot.pivotClaw(()-> PivotPos.INTAKE),
-                intakePivot.setIntakePos(()-> IntakePos.INTAKING)
-            ).until(trg_inClaw)
+            intakePreEle()
         );
 
         stateTrg_eleToL1.onTrue(
             Commands.sequence(
-                ele.toHeightCoral(()-> EleHeight.L1)
+                setL1()
             )
         );
 
         stateTrg_eleToL2.onTrue(
             Commands.sequence(
-                ele.toHeightCoral(()-> EleHeight.L2)
+                setL2()
             )
         );
 
         stateTrg_eleToL3.onTrue(
             Commands.sequence(
-                ele.toHeightCoral(()-> EleHeight.L3)
+                setL3()
             )
         );
 
         stateTrg_eleToL4.onTrue(
-            Commands.sequence(
-                ele.toHeightCoral(()-> EleHeight.L4),
-                clawPivot.pivotClaw(() -> PivotPos.L4)
-            )
+            setL4()
         );
 
         stateTrg_scoreReady.onTrue(
@@ -231,9 +266,7 @@ public class SuperStructure {
             )
         );
         stateTrg_scoring.onTrue(
-            Commands.sequence(
-                claw.setClawPower(-0.1) 
-            )
+            score()
         );
     }
 
