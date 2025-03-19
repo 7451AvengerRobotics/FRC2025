@@ -113,7 +113,6 @@ public class Robot extends LoggedRobot {
   public void robotInit() {
   // ... all other robot initialization
     FollowPathCommand.warmupCommand().schedule();
-    addPeriodic(() -> robotContainer.superStructure.periodic(), 0.01);
   }
 
   /** This function is called periodically during all modes. */
@@ -128,6 +127,7 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    robotContainer.superStructure.periodic();
 
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
