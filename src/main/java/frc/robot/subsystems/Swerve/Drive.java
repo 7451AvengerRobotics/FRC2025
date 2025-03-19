@@ -90,7 +90,7 @@ public class Drive extends SubsystemBase {
 
   private final PIDController xController = new PIDController(4.0, 0.0, 0.0);
   private final PIDController yController = new PIDController(4.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(1, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(5, 0.0, 0.0);
 
   private boolean holonomicControllerActive = false;
   private Pose2d holonomicPoseTarget = new Pose2d();
@@ -129,8 +129,8 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, 3, TunerConstantsNew.BackRight);
 
     this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-        new PIDController(3.5, 0, 0),
-        new PIDController(3.5, 0, 0),
+        new PIDController(5, 0, 0),
+        new PIDController(5, 0, 0),
         headingController,
         new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)));
 
@@ -150,7 +150,7 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(5, 0.0, 0.0), new PIDConstants(5, 0.0, 0.0)),
+            new PIDConstants(10, 0.0, 0.0), new PIDConstants(10, 0.0, 0.0)),
         PP_CONFIG,
         () -> {
           var alliance =  DriverStation.getAlliance();
