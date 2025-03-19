@@ -15,6 +15,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Index;
 import frc.robot.subsystems.LedHandler;
+import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Intake.Intake;
@@ -24,7 +25,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.GamepadAxisButton;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -36,9 +36,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 
 import frc.robot.subsystems.vision.VisionIO;
 
@@ -69,7 +69,26 @@ public class RobotContainer {
   private final Index index = new Index();
   private final LedHandler led = new LedHandler();
   private final Climber climb = new Climber();
+  JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
+  JoystickButton intakeTrough = new JoystickButton(buttonPannel, ButtonConstants.intakeTrough);
+  JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
+  JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
+  JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
+  JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
+  JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
+  JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
+  JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
+  JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
+  JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
+  JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
 
+  Trigger L2req = new Trigger(L2::getAsBoolean);
+  Trigger L3req = new Trigger(L3::getAsBoolean);
+  Trigger L4req = new Trigger(L4::getAsBoolean);
+  Trigger scoreReq = new Trigger(intakeAlgae::getAsBoolean);
+  Trigger L1req = new Trigger(intakeTrough::getAsBoolean);
+
+  public final SuperStructure superStructure;
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -92,8 +111,25 @@ public class RobotContainer {
             new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
             new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
             new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d),
-            new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d));
-        // VisionConstants.limelight2Transform3d));
+            new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d)
+        );
+
+        superStructure = new SuperStructure(
+            intake, 
+            intakePivot, 
+            index, 
+            elevator, 
+            clawPivot, 
+            claw, 
+            climb, 
+            controller.R2(), 
+            L1req, 
+            L1req,
+            L3req, 
+            L4req, 
+            scoreReq
+        );
+
         break;
 
       case SIM:
@@ -109,9 +145,26 @@ public class RobotContainer {
             drive::addVisionMeasurement,
             new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d,
                 drive::getPose));
+
+                superStructure = new SuperStructure(
+            intake, 
+            intakePivot, 
+            index, 
+            elevator, 
+            clawPivot, 
+            claw, 
+            climb, 
+            controller.R2(), 
+            L1req, 
+            L1req,
+            L3req, 
+            L4req, 
+            scoreReq
+        );
         break;
 
       default:
+
 
         drive = new Drive(
             new GyroIO() {
@@ -129,6 +182,23 @@ public class RobotContainer {
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
         }, new VisionIO() {
         });
+
+        superStructure = new SuperStructure(
+            intake, 
+            intakePivot, 
+            index, 
+            elevator, 
+            clawPivot, 
+            claw, 
+            climb, 
+            controller.R2(), 
+            L1req, 
+            L1req,
+            L3req, 
+            L4req, 
+            scoreReq
+        );
+
         break;
 
     }
@@ -136,32 +206,11 @@ public class RobotContainer {
     autos = new AutoRoutines(drive, elevator, clawPivot, intakePivot, claw, intake, index);
     autoChooser1 = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Mode", autoChooser1);
-    // NamedCommands.registerCommand("Score",
-    // drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new
-    // Translation2d(0,0.18), new Rotation2d(0))));
-    // NamedCommands.registerCommand("Score", claw.setClawPower(0.5));
-    NamedCommands.registerCommand("Score", 
-    Commands.sequence(
-    clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-    Commands.parallel(
-            drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.52, -0.18),
-                            new Rotation2d(0))),
-            elevator.setElevatorPosition(1.9)
-                    .until(
-                            elevator::endCommand)
-                    .onlyIf(
-                            clawPivot::clawClear))
-            .andThen(claw.setClawPower(0.4).until(claw::notClawBroke))));
+    
 
     configureBindings();
-    autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
-    autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
-    autoChooser1.addOption("Processor Red Side L2 Coral ", autos.processorRedSide2L2Coral());
-    autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
-    autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
-    autoChooser1.addOption("red Test", autos.redTest());
-    autoChooser1.addOption("Center Auto", autos.centerAuto());
+    configAutos();
+    
 
     led.setDefaultCommand(
         new setLedColorCommand(led, 255, 255, 0)
@@ -176,33 +225,11 @@ public class RobotContainer {
             .andThen(
                 new setLedColorCommand(led, 0, 255, 0))
             .until(
-                claw::notClawBroke));
+                claw::notClawBroke)
+    );
   }
 
   private void configureBindings() {
-
-    JoystickButton processor = new JoystickButton(buttonPannel, ButtonConstants.processor);
-    JoystickButton intakeTrough = new JoystickButton(buttonPannel, ButtonConstants.intakeTrough);
-    JoystickButton L4 = new JoystickButton(buttonPannel, ButtonConstants.L4);
-    JoystickButton L3 = new JoystickButton(buttonPannel, ButtonConstants.L3);
-    JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
-    // JoystickButton algae2 = new JoystickButton(buttonPannel,
-    // ButtonConstants.algae2);
-    JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
-    JoystickButton reset = new JoystickButton(buttonPannel, ButtonConstants.reset);
-    JoystickButton blueReef = new JoystickButton(buttonPannel, ButtonConstants.blueReef);
-    JoystickButton greenReef = new JoystickButton(buttonPannel, ButtonConstants.greenReef);
-    JoystickButton redReef = new JoystickButton(buttonPannel, ButtonConstants.redReef);
-    JoystickButton whiteReef = new JoystickButton(buttonPannel, ButtonConstants.whiteReef);
-    JoystickButton yellowReef = new JoystickButton(buttonPannel, ButtonConstants.yellowReef);
-    GamepadAxisButton L1 = new GamepadAxisButton(this::axis1ThresholdLessThanPoint5);
-    // GamepadAxisButton algae1 = new
-    // GamepadAxisButton(this::axis0ThresholdGreatererThanPoint5);
-    // GamepadAxisButton blackReef = new
-    // GamepadAxisButton(this::axis0ThresholdLessThanPoint5);
-
-    clawPivot.setDefaultCommand(
-        clawPivot.setClawPivotAngle(0.03));
 
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
@@ -212,7 +239,7 @@ public class RobotContainer {
             () -> -controller.getRightX() * 0.7));
 
     // Switch to X pattern when X button is pressed
-    controller.PS().onTrue(
+    controller.PS().and(controller.touchpad()).onTrue(
         Commands.runOnce(
             drive::stopWithX,
             drive));
@@ -221,8 +248,15 @@ public class RobotContainer {
 
     // Drive Commands
     controller.R1().whileTrue(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())));
+        Commands.parallel(
+            drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
+            superStructure.forceL1().until(superStructure.stateTrg_scoreReady)
+        ).andThen(superStructure.forceShoot())
+    ).onFalse(
+        superStructure.forceIdle()
+    );
+
+
 
     controller.L1().whileTrue(
         drive.driveToClosestReefScoringFaceWithTranslate(
@@ -264,13 +298,13 @@ public class RobotContainer {
                 .until(climb::endClimbSeq)));
 
     // L1 - L4
-    L1.whileTrue(
-        Commands.parallel(
-            intakePivot.setIntakePivotAngle(0.15)
-                .until(
-                    intakePivot::endCommand)
-                .andThen(
-                    intake.setintakePower(-0.23))));
+    // L1.whileTrue(
+    //     Commands.parallel(
+    //         intakePivot.setIntakePivotAngle(0.15)
+    //             .until(
+    //                 intakePivot::endCommand)
+    //             .andThen(
+    //                 intake.setintakePower(-0.23))));
 
     L2.onTrue(
         (elevator.setElevatorPosition(1.9)
@@ -381,5 +415,15 @@ public class RobotContainer {
 
   public boolean axis1ThresholdLessThanPoint5() {
     return buttonPannel.getRawAxis(1) < .5;
+  }
+
+  public void configAutos() {
+    autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
+    autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
+    autoChooser1.addOption("Processor Red Side L2 Coral ", autos.processorRedSide2L2Coral());
+    autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
+    autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
+    autoChooser1.addOption("red Test", autos.redTest());
+    autoChooser1.addOption("Center Auto", autos.centerAuto());
   }
 }

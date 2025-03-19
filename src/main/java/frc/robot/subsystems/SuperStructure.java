@@ -263,6 +263,10 @@ public class SuperStructure {
         return (changeStateCmd(State.ELE_TO_L4));
     }
 
+    public void periodic() {
+        stateEventLoop.poll();
+    }
+
     public enum State {
         IDLE(0, "idle"),
         INTAKING(1, "intaking"),

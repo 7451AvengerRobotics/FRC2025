@@ -106,12 +106,14 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+    
   }
 
   @Override
   public void robotInit() {
   // ... all other robot initialization
-  FollowPathCommand.warmupCommand().schedule();
+    FollowPathCommand.warmupCommand().schedule();
+    addPeriodic(() -> robotContainer.superStructure.periodic(), 0.01);
   }
 
   /** This function is called periodically during all modes. */
