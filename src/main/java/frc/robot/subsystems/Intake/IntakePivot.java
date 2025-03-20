@@ -105,7 +105,7 @@ public class IntakePivot extends SubsystemBase {
         L1(0.1),
         INTAKING(0.25),
         INTAKE(0.36),
-        STOW(0);
+        STOW(0.05);
 
         public final double intakeRotations;
 

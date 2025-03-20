@@ -14,7 +14,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.RobotConstants.ClawConstants;
+import frc.robot.Constants.RobotConstants.ClawPivotConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 
 public class ClawPivot extends SubsystemBase {
 
-    private final TalonFX claw_pivot = new TalonFX(ClawConstants.kClawPivotID);
+    private final TalonFX claw_pivot = new TalonFX(ClawPivotConstants.kClawPivotID);
     private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0);
 
     public ClawPivot() {
@@ -33,7 +33,7 @@ public class ClawPivot extends SubsystemBase {
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 40;
         FeedbackConfigs fdb = cfg.Feedback;
-        fdb.SensorToMechanismRatio = ClawConstants.kClawGearRatio;
+        fdb.SensorToMechanismRatio = ClawPivotConstants.kClawPivotGearRatio;
         cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
@@ -42,12 +42,12 @@ public class ClawPivot extends SubsystemBase {
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;
-        slot0.kS = ClawConstants.clawPivotkS;
-        slot0.kV = ClawConstants.clawPivotkV;
-        slot0.kA = ClawConstants.clawPivotkA;
-        slot0.kP = ClawConstants.clawPivotkP;
-        slot0.kI = ClawConstants.clawPivotkI;
-        slot0.kD = ClawConstants.clawPivotkD;
+        slot0.kS = ClawPivotConstants.clawPivotkS;
+        slot0.kV = ClawPivotConstants.clawPivotkV;
+        slot0.kA = ClawPivotConstants.clawPivotkA;
+        slot0.kP = ClawPivotConstants.clawPivotkP;
+        slot0.kI = ClawPivotConstants.clawPivotkI;
+        slot0.kD = ClawPivotConstants.clawPivotkD;
 
         StatusCode status = StatusCode.StatusCodeNotInitialized;
         for (int i = 0; i < 5; ++i) {

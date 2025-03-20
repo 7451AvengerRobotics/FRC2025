@@ -71,11 +71,11 @@ public class SuperStructure {
                     intake.setintakePower(0.5),
                     index.setIndexPower(0.7),
                     claw.setClawPower(0.1),
-                    intakePivot.setIntakePivotAngle(.2)
+                    intakePivot.setIntakePos(() -> IntakePos.INTAKING)
             ).until(claw::clawBroke),
             Commands.parallel(
-                    intakePivot.setIntakePivotAngle(0),
-                    clawPivot.setClawPivotAngle(0.03)
+                    intakePivot.setIntakePos(() -> IntakePos.STOW),
+                    clawPivot.pivotClaw(() -> PivotPos.L2)
             )
         );
     }
