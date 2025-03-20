@@ -81,6 +81,7 @@ public class RobotContainer {
   Trigger L4req = new Trigger(L4::getAsBoolean);
   Trigger scoreReq = new Trigger(intakeAlgae::getAsBoolean);
   Trigger L1req = new Trigger(intakeTrough::getAsBoolean);
+  Trigger stowClaw = new Trigger(claw::clawBroke);
 
   public final SuperStructure superStructure;
   /**
@@ -206,6 +207,8 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+
+    stowClaw.onTrue(superStructure.stow());
 
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
