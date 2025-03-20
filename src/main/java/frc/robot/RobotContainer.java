@@ -240,7 +240,7 @@ public class RobotContainer {
             ),
             Commands.waitUntil(manip.touchpad()),
             superStructure.score().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
-                new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())))
+                new Transform2d(new Translation2d(0.65, 0.15), new Rotation2d())))
         )
     ).onFalse(
         superStructure.resetEverything()
