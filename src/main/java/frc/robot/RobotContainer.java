@@ -239,7 +239,7 @@ public class RobotContainer {
                 superStructure.setReefLvl(manip)
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
+            superStructure.score().until(claw::notClawBroke).andThen(drive.driveToClosestReefScoringFaceWithTranslate(
                 new Transform2d(new Translation2d(0.65, 0.15), new Rotation2d())))
         )
     ).onFalse(
@@ -255,7 +255,7 @@ public class RobotContainer {
                 superStructure.setReefLvl(manip)
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
+            superStructure.score().until(claw::notClawBroke).andThen(drive.driveToClosestReefScoringFaceWithTranslate(
                 new Transform2d(new Translation2d(0.65, -0.21), new Rotation2d())))
         )
     ).onFalse(
@@ -268,7 +268,7 @@ public class RobotContainer {
                 drive.driveToClosestReefScoringFaceWithTranslate(
                     new Transform2d(new Translation2d(0.48, 0), new Rotation2d(0))
                 ),
-                superStructure.setReefLvl(manip)
+                superStructure.setAlgaeLvl(manip)
             )
         )
     );
