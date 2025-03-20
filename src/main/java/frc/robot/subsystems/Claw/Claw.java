@@ -1,5 +1,7 @@
 package frc.robot.subsystems.Claw;
 
+import java.util.Set;
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -9,8 +11,6 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -97,6 +97,16 @@ public class Claw extends SubsystemBase {
         return run(() -> {
             holdWhenStall();
         });
+    }
+
+    public Command intakeAlgae(double power) {
+        return
+            setClawPower(power).until(this::motorStall).andThen(
+                Commands.defer(
+                    () -> setClawHold(), 
+                    Set.of(this)
+                )
+            );
     }
 
 
