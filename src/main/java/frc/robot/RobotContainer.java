@@ -239,7 +239,8 @@ public class RobotContainer {
                 superStructure.setReefLvl(manip)
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score()
+            superStructure.score().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
+                new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())))
         )
     ).onFalse(
         superStructure.resetEverything()
@@ -254,7 +255,8 @@ public class RobotContainer {
                 superStructure.setReefLvl(manip)
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score()
+            superStructure.score().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
+                new Transform2d(new Translation2d(0.65, -0.21), new Rotation2d())))
         )
     ).onFalse(
         superStructure.resetEverything()
