@@ -66,6 +66,7 @@ public class SuperStructure {
                 intakePivot.setIntakePos(()-> IntakePos.INTAKE)
             ),
             Commands.waitUntil(ele::getLimitSwitch),
+            Commands.waitUntil(claw::notStalled),
             clawPivot.pivotClaw(() -> PivotPos.INTAKE),
             Commands.parallel(
                     intake.setintakePower(0.5),

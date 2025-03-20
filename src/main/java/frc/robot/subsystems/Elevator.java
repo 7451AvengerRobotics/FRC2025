@@ -44,8 +44,8 @@ public class Elevator extends SubsystemBase {
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ElevatorConstants.kElevatorGearRatio;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(11)) // 5 (mechanism) rotations per second cruise
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20)) // 5 (mechanism) rotations per second cruise
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(20)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;

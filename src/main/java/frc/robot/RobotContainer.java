@@ -82,6 +82,7 @@ public class RobotContainer {
   Trigger scoreReq = new Trigger(intakeAlgae::getAsBoolean);
   Trigger L1req = new Trigger(intakeTrough::getAsBoolean);
   Trigger stowClaw = new Trigger(claw::clawBroke);
+  //Trigger holdingBall = new Trigger(claw::motorStall);
 
   public final SuperStructure superStructure;
   /**
@@ -257,7 +258,7 @@ public class RobotContainer {
                 drive.driveToClosestReefScoringFaceWithTranslate(
                     new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())
                 ),
-                superStructure.setAlgaeLvl(manip)
+                superStructure.setReefLvl(manip)
             ),
             Commands.waitUntil(manip.touchpad()),
             superStructure.score().until(claw::notClawBroke).andThen(drive.driveToClosestReefScoringFaceWithTranslate(

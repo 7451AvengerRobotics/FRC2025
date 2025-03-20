@@ -83,6 +83,10 @@ public class Claw extends SubsystemBase {
        return (claw.getOutputCurrent() > 41);
     }
 
+    public boolean notStalled() {
+        return !motorStall();
+    }
+
     public void holdWhenStall() {
 
         if (motorStall()) {
