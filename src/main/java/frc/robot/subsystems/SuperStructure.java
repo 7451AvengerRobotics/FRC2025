@@ -80,6 +80,22 @@ public class SuperStructure {
         );
     }
 
+    public Command stow() {
+        return Commands.either(
+            Commands.sequence(
+                Commands.waitUntil(clawPivot::clawClear),
+                clawPivot.setClawPivotAngle(PivotPos.L2),
+                ele.setElevatorPosition(0)
+            ),
+            Commands.sequence(
+                Commands.waitUntil(clawPivot::clawClear),
+                clawPivot.setClawPivotAngle(PivotPos.INTAKE),
+                ele.setElevatorPosition(0)
+            ),
+            claw::clawBroke
+        );
+    }
+
     public Command score() {
         return Commands.sequence(
                 claw.setClawPower(-0.1) 

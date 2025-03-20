@@ -243,7 +243,7 @@ public class RobotContainer {
                 new Transform2d(new Translation2d(0.65, 0.15), new Rotation2d())))
         )
     ).onFalse(
-        superStructure.resetEverything()
+        superStructure.stow()
     );
 
     controller.L1().whileTrue(
@@ -271,6 +271,8 @@ public class RobotContainer {
                 superStructure.setAlgaeLvl(manip)
             )
         )
+    ).onFalse(
+        superStructure.resetEverything()
     );
 
   }
