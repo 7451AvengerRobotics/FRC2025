@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Intake extends SubsystemBase {
 
     private final TalonFX intake = new TalonFX(IntakeConstants.kIntakeID);;
-    private final DigitalInput intakebreak = new DigitalInput(0);
+    private final DigitalInput intakebreak = new DigitalInput(6);
 
     public Intake(){
 

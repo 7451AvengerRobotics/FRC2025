@@ -33,11 +33,16 @@ public class ClawPivot extends SubsystemBase {
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
         cfg.CurrentLimits.StatorCurrentLimit = 40;
         FeedbackConfigs fdb = cfg.Feedback;
+
+        cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.05;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 0.502;
         fdb.SensorToMechanismRatio = ClawPivotConstants.kClawPivotGearRatio;
-        cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(0.75)) // 5 (mechanism) rotations per second cruise
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(2)) // 5 (mechanism) rotations per second cruise
             .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
@@ -59,7 +64,7 @@ public class ClawPivot extends SubsystemBase {
             System.out.println("Could not configure device. Error: " + status.toString());
         }
 
-        claw_pivot.getConfigurator().setPosition(-0.061279296875);
+        claw_pivot.getConfigurator().setPosition(0);
 
          BaseStatusSignal.setUpdateFrequencyForAll(250,
             claw_pivot.getPosition(),
@@ -92,11 +97,11 @@ public class ClawPivot extends SubsystemBase {
 
     public boolean nearSetpoint(PivotPos pivot) {
         double diff = pivotRequest.Position - pivot.clawRotations;
-        return Math.abs(diff) <= 0.05;
+        return Math.abs(diff) <= 0.01;
     }
 
     public boolean clawClear() {
-        return getClawPivotPosition() > 0;
+        return getClawPivotPosition() > 0.036;
     }
 
     public boolean getClawVelo() {
@@ -117,11 +122,11 @@ public class ClawPivot extends SubsystemBase {
     
 
     public enum PivotPos {
-        L2(6.75097),
-        L3(9.529046 - 0.17),
-        L4(-0.02),
-        INTAKE(2),
-        BARGE(5),
+        L2(0.45),
+        L3(0.45),
+        L4(0.29),
+        INTAKE(-0.003173828125),
+        BARGE(0.29),
         RESET(0),
         PROCESSOR(0);
 

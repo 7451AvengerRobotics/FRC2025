@@ -21,7 +21,7 @@ import frc.robot.Constants.RobotConstants.*;
 public class Claw extends SubsystemBase {
 
     private final SparkFlex claw;
-    private final DigitalInput clawBeamBreak = new DigitalInput(4);
+    private final DigitalInput clawBeamBreak = new DigitalInput(9);
     private SparkFlexConfig motorConfig;
     private SparkClosedLoopController closedLoopController;
     private RelativeEncoder encoder;
@@ -37,6 +37,8 @@ public class Claw extends SubsystemBase {
         encoder = claw.getEncoder();
 
         motorConfig = new SparkFlexConfig();
+
+        motorConfig.inverted(true);
 
         motorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
@@ -62,9 +64,6 @@ public class Claw extends SubsystemBase {
         return runEnd(
             () -> {
                 run(power);
-                if(motorStall() && !clawBroke()){
-                    run(0.2);
-                }
             }, 
             () -> {
                 run(0);
@@ -80,7 +79,7 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean motorStall() {
-       return (claw.getOutputCurrent() > 41);
+       return (claw.getOutputCurrent() > 50);
     }
 
     public boolean notStalled() {

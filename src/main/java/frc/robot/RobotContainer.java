@@ -18,6 +18,8 @@ import frc.robot.subsystems.LedHandler;
 import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
+import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
+import frc.robot.subsystems.Elevator.EleHeight;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
 import frc.robot.subsystems.Swerve.*;
@@ -38,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import com.ctre.phoenix6.controls.jni.ControlConfigJNI;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import frc.robot.subsystems.vision.VisionIO;
@@ -236,7 +239,8 @@ public class RobotContainer {
             .ignoringDisable(true));
     
 
-    controller.R2().onTrue(superStructure.intake());     
+    controller.R2().onTrue(superStructure.intake().andThen(superStructure.stow()));     
+    
     controller.R1().whileTrue(
         Commands.sequence(
             Commands.parallel(
@@ -281,6 +285,31 @@ public class RobotContainer {
         superStructure.resetEverything()
     );
 
+    controller.triangle().onTrue(
+        superStructure.setL2Algae()
+    );
+
+    controller.square().onTrue(superStructure.resetEverything());
+
+    controller.cross().onTrue(
+        superStructure.setL3Algae()
+    );
+
+    controller.circle().onTrue(
+        superStructure.setL4()
+    );
+
+    controller.povDown().onTrue(
+        superStructure.readyToClimb()
+    );
+
+    controller.povUp().onTrue(
+        superStructure.climb()
+    );
+
+    controller.L2().whileTrue(
+        superStructure.score()
+    );
   }
 
   /**

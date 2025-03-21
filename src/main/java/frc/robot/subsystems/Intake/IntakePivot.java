@@ -93,7 +93,7 @@ public class IntakePivot extends SubsystemBase {
 
     public boolean nearSetpoint(IntakePos pos) {
         double diff = pivotRequest.Position - pos.intakeRotations;
-        return Math.abs(diff) <= 0.05;
+        return Math.abs(diff) <= 0.005;
     } 
 
     @Override
@@ -104,7 +104,7 @@ public class IntakePivot extends SubsystemBase {
     public enum IntakePos {
         L1(0.1),
         INTAKING(0.25),
-        INTAKE(0.36),
+        INTAKE(0.35),
         STOW(0.05);
 
         public final double intakeRotations;

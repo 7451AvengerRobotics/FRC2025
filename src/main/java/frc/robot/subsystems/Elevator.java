@@ -23,7 +23,7 @@ import frc.robot.Constants.RobotConstants.*;
 
 public class Elevator extends SubsystemBase {
     private final TalonFX elevator = new TalonFX(ElevatorConstants.kElevatorID);
-    private final DigitalInput limitSwitch = new DigitalInput(2);
+    private final DigitalInput limitSwitch = new DigitalInput(5);
     private final MotionMagicVoltage elevatorRequest = new MotionMagicVoltage(0);
 
     public Elevator(){
@@ -38,14 +38,14 @@ public class Elevator extends SubsystemBase {
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.51;
+        cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 5.59;
         cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         FeedbackConfigs fdb = cfg.Feedback;
         fdb.SensorToMechanismRatio = ElevatorConstants.kElevatorGearRatio;
         MotionMagicConfigs mm = cfg.MotionMagic;
-        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(20)) // 5 (mechanism) rotations per second cruise
-            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(20)) // Take approximately 0.5 seconds to reach max vel
+        mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(12)) // 5 (mechanism) rotations per second cruise
+            .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10)) // Take approximately 0.5 seconds to reach max vel
             .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100)); // Take approximately 0.1 seconds to reach max accel 
 
         Slot0Configs slot0 = cfg.Slot0;
@@ -121,12 +121,16 @@ public class Elevator extends SubsystemBase {
 
     public boolean nearSetpoint(EleHeight height) {
         double diff = elevatorRequest.Position - height.rotations;
-        return Math.abs(diff) <= 0.05;
+        return Math.abs(diff) <= 0.01;
     }
 
     public boolean nearSetpoint(AlgaeHeight height) {
         double diff = elevatorRequest.Position - height.rotations;
-        return Math.abs(diff) <= 0.05;
+        return Math.abs(diff) <= 0.01;
+    }
+
+    public boolean atIntakeSetPoint() {
+        return Math.abs(elevator.getPosition().getValueAsDouble()  - EleHeight.INTAKE.rotations) < 0.01;
     }
 
     @Override
@@ -138,10 +142,11 @@ public class Elevator extends SubsystemBase {
 
     public enum EleHeight {
         RESET(0),
-        L1(5.590325),
-        L2(5.653564 + 0.169),
-        L3(8.451660 + (0.169 / 2)),
-        L4(12.89);
+        L1(0.5),
+        L2(0),
+        L3(1.5),
+        INTAKE(0.2),
+        L4(4.9);
 
         public final double rotations;
 
@@ -151,9 +156,9 @@ public class Elevator extends SubsystemBase {
     }
 
     public enum AlgaeHeight {
-        L2(6.75097),
-        L3(9.529046 - 0.17),
-        BARGE(5),
+        L2(0.5),
+        L3(1.98),
+        BARGE(5.59),
         PROCESSOR(0);
 
         public final double rotations;

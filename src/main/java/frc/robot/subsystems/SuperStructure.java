@@ -45,12 +45,12 @@ public class SuperStructure {
     /* methods that Actually Do Things */
     public Command resetEverything() {
         return Commands.sequence(
-            claw.setClawPower(0),
-            index.setIndexPower(0),
-            intake.setintakePower(0),
-            Commands.parallel(
-                climb.setClimberAngle(() -> ClimberPos.STOW),
-                ele.toHeightCoral(() -> EleHeight.RESET)
+            Commands.deadline(
+                ele.toHeightCoral(() -> EleHeight.RESET),
+                claw.setClawPower(0),
+                index.setIndexPower(0),
+                intake.setintakePower(0),
+                climb.setClimberAngle(() -> ClimberPos.STOW)
             ),
             Commands.waitUntil(ele::getLimitSwitch),
             clawPivot.pivotClaw(() -> PivotPos.RESET),
@@ -62,36 +62,34 @@ public class SuperStructure {
     public Command intake() {
         return Commands.sequence(
             Commands.parallel(
-                intake.setintakePower(1).until(intake::getIntakeBreak),
+                ele.setElevatorPosition(0.17),
+                intake.setintakePower(1),
                 intakePivot.setIntakePos(()-> IntakePos.INTAKE)
-            ),
-            Commands.waitUntil(ele::getLimitSwitch),
-            Commands.waitUntil(claw::notStalled),
+            ).until(intake::getIntakeBreak),
             clawPivot.pivotClaw(() -> PivotPos.INTAKE),
             Commands.parallel(
+                    ele.setElevatorPosition(0.17),
                     intake.setintakePower(0.5),
-                    index.setIndexPower(0.7),
-                    claw.setClawPower(0.1),
+                    index.setIndexPower(0.4),
+                    claw.setClawPower(0.5),
                     intakePivot.setIntakePos(() -> IntakePos.INTAKING)
-            ).until(claw::clawBroke),
-            Commands.parallel(
-                    intakePivot.setIntakePos(() -> IntakePos.STOW),
-                    clawPivot.pivotClaw(() -> PivotPos.L2)
-            )
+            ).until(claw::clawBroke)
         );
     }
 
     public Command stow() {
         return Commands.either(
             Commands.sequence(
-                Commands.waitUntil(clawPivot::clawClear),
+                //Commands.waitUntil(clawPivot::clawClear),
                 clawPivot.setClawPivotAngle(PivotPos.L2),
-                ele.setElevatorPosition(0)
+                ele.setElevatorPosition(0).until(ele::elevatorReset),
+                intakePivot.setIntakePos(() -> IntakePos.STOW)
             ),
             Commands.sequence(
-                Commands.waitUntil(clawPivot::clawClear),
+                //Commands.waitUntil(clawPivot::clawClear),
                 clawPivot.setClawPivotAngle(PivotPos.INTAKE),
-                ele.setElevatorPosition(0)
+                ele.setElevatorPosition(0),
+                intakePivot.setIntakePos(() -> IntakePos.STOW)
             ),
             claw::clawBroke
         );
@@ -99,7 +97,7 @@ public class SuperStructure {
 
     public Command score() {
         return Commands.sequence(
-                claw.setClawPower(-0.1) 
+                claw.setClawPower(-0.5) 
             );
     }
 
@@ -134,7 +132,7 @@ public class SuperStructure {
     public Command setL3Algae() {            
         return Commands.sequence(
             ele.toHeightAlgae(()-> AlgaeHeight.L3),
-            clawPivot.pivotClaw(() -> PivotPos.L2)
+            clawPivot.pivotClaw(() -> PivotPos.BARGE)
         );
     }
 
@@ -204,12 +202,19 @@ public class SuperStructure {
         );
     }
 
+    public Command intakeAlgae(){
+        return Commands.parallel(
+            setL3Algae(),
+            claw.setClawPower(-0.85)
+        );
+    }
+
     public Command climb() {
         return Commands.parallel(
             clawPivot.setClawPivotAngle(0),
             climb.setClimberPower(0.37)
                 .until(climb::endClimbSeq).finallyDo(
-                    () -> climb.setAngle(-0.25)
+                    () -> climb.setAngle(0.25)
                 )
         );
     }
