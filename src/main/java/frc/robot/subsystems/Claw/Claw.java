@@ -79,7 +79,7 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean motorStall() {
-       return (claw.getOutputCurrent() > 50);
+       return (claw.getOutputCurrent() > 50 && claw.getEncoder().getVelocity() == 0);
     }
 
     public boolean notStalled() {

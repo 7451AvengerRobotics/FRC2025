@@ -62,10 +62,11 @@ public class SuperStructure {
     public Command intake() {
         return Commands.sequence(
             Commands.parallel(
-                ele.setElevatorPosition(0.17),
                 intake.setintakePower(1),
                 intakePivot.setIntakePos(()-> IntakePos.INTAKE)
             ).until(intake::getIntakeBreak),
+            Commands.waitUntil(ele::atIntakeSetPoint),
+            ele.setElevatorPosition(0.17),
             clawPivot.pivotClaw(() -> PivotPos.INTAKE),
             Commands.parallel(
                     ele.setElevatorPosition(0.17),

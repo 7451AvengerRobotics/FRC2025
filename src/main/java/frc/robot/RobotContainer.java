@@ -5,7 +5,6 @@
 package frc.robot;
 
 import frc.robot.Constants.ButtonConstants;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Autos.AutoRoutines;
 import frc.robot.commands.LEDCommands.LedStrobeCommand;
@@ -18,8 +17,6 @@ import frc.robot.subsystems.LedHandler;
 import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
-import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
-import frc.robot.subsystems.Elevator.EleHeight;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
 import frc.robot.subsystems.Swerve.*;
@@ -40,7 +37,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-import com.ctre.phoenix6.controls.jni.ControlConfigJNI;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import frc.robot.subsystems.vision.VisionIO;
