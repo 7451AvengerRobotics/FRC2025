@@ -107,8 +107,8 @@ public class IntakePivot extends SubsystemBase {
     }
 
     public boolean nearSetpoint(IntakePos pos) {
-        double diff = pivotRequest.Position - pos.intakeRotations;
-        return Math.abs(diff) <= 0.005;
+        double diff = intake_pivot.getPosition().getValueAsDouble() - pos.intakeRotations;
+        return Math.abs(diff) <= 0.01;
     } 
 
     @Override

@@ -120,12 +120,12 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean nearSetpoint(EleHeight height) {
-        double diff = elevatorRequest.Position - height.rotations;
+        double diff = elevator.getPosition().getValueAsDouble() - height.rotations;
         return Math.abs(diff) <= 0.03;
     }
 
     public boolean nearSetpoint(AlgaeHeight height) {
-        double diff = elevatorRequest.Position - height.rotations;
+        double diff = elevator.getPosition().getValueAsDouble() - height.rotations;
         return Math.abs(diff) <= 0.03;
     }
 

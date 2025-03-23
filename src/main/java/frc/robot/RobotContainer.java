@@ -245,14 +245,14 @@ public class RobotContainer {
     manip.triangle().onTrue(superStructure.fixIntake());
     
     // right side score
-    controller.R1().whileTrue(
+    controller.R1().onTrue(
         Commands.sequence(
             Commands.parallel(
                 // drive.driveToClosestReefScoringFaceWithTranslate(
-                //     new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
+                //     new Transform2d(new Translation2d(0.58, 0.15), new Rotation2d())),
                 superStructure.setReefLvl()
             ),
-            Commands.waitUntil(manip.touchpad()),
+            Commands.waitUntil(manip.R2()),
             superStructure.score().until(claw::notClawBroke)
         )
     ).onFalse(
@@ -264,11 +264,11 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())
+                    new Transform2d(new Translation2d(0.58, -0.21), new Rotation2d())
                 ),
                 superStructure.setReefLvl()
             ),
-            Commands.waitUntil(manip.touchpad()),
+            Commands.waitUntil(manip.R2()),
             superStructure.score().until(claw::notClawBroke)
         )
     ).onFalse(
@@ -282,10 +282,6 @@ public class RobotContainer {
     );
 
     controller.square().onTrue(superStructure.resetEverything());
-
-    // controller.cross().onTrue(
-    //     superStructure.setL3Algae()
-    // );
 
     controller.povDown().onTrue(
         superStructure.readyToClimb()
