@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import java.util.Set;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -21,18 +24,16 @@ public class SuperStructure {
     private final Claw claw;
     private final Climber climb;
     private final Index index;
-
-
+    private int reefLvl = 1;
 
     public SuperStructure(
-        Intake intake,
-        IntakePivot intakePivot,
-        Index index,
-        Elevator ele,
-        ClawPivot clawPivot,
-        Claw claw,
-        Climber climb
-    ) {
+            Intake intake,
+            IntakePivot intakePivot,
+            Index index,
+            Elevator ele,
+            ClawPivot clawPivot,
+            Claw claw,
+            Climber climb) {
         this.intake = intake;
         this.intakePivot = intakePivot;
         this.index = index;
@@ -45,180 +46,274 @@ public class SuperStructure {
     /* methods that Actually Do Things */
     public Command resetEverything() {
         return Commands.sequence(
-            Commands.deadline(
-                ele.toHeightCoral(() -> EleHeight.RESET),
-                claw.setClawPower(0),
-                index.setIndexPower(0),
-                intake.setintakePower(0),
-                climb.setClimberAngle(() -> ClimberPos.STOW)
-            ),
-            Commands.waitUntil(ele::getLimitSwitch),
-            clawPivot.pivotClaw(() -> PivotPos.RESET),
-            Commands.waitUntil(climb::endClimbCommand),//Change to elevator safe zone
-            intakePivot.setIntakePos(() -> IntakePos.STOW)
+                Commands.either(clawPivot.pivotClaw(() -> PivotPos.RESET), clawPivot.pivotClaw(() -> PivotPos.L2),
+                        ele::getLimitSwitch),
+                Commands.deadline(
+                        ele.toHeightCoral(() -> EleHeight.RESET),
+                        claw.setClawPower(0).withTimeout(0.1),
+                        index.setIndexPower(0).withTimeout(0.1),
+                        intake.setintakePower(0).withTimeout(0.1),
+                        climb.setClimberAngle(() -> ClimberPos.STOW).withTimeout(1)),
+                Commands.waitUntil(ele::getLimitSwitch),
+                clawPivot.pivotClaw(() -> PivotPos.RESET),
+                intakePivot.setIntakePos(() -> IntakePos.STOW));
+    }
+
+    public Command reset() {
+        return Commands.sequence(
+                Commands.either(clawPivot.pivotClaw(() -> PivotPos.RESET), clawPivot.pivotClaw(() -> PivotPos.L2),
+                        ele::getLimitSwitch),
+                Commands.waitUntil(clawPivot::clawClear),
+                Commands.deadline(
+                        ele.toHeightCoral(() -> EleHeight.RESET),
+                        index.setIndexPower(0),
+                        intake.setintakePower(0),
+                        climb.setClimberAngle(() -> ClimberPos.STOW)),
+                Commands.waitUntil(ele::getLimitSwitch),
+                Commands.waitUntil(climb::endClimbCommand), // Change to elevator safe zone
+                intakePivot.setIntakePos(() -> IntakePos.STOW));
+    }
+
+    public Command intakeTest() {
+        return Commands.sequence(
+        Commands.either(
+            Commands.sequence(Commands.parallel(
+                intake.setintakePower(1).until(intake::getIntakeBreak),
+                intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(
+                        intake::propIntake)
+                .andThen(
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING).onlyIf(intake::propIntake)
+                                .alongWith(
+                                        intake.setintakePower(1).until(intake::getIntakeBreak))),
+                Commands.waitUntil(intake::getIntakeBreak),
+                ele.toHeightCoral(() -> EleHeight.INTAKE),
+                clawPivot.pivotClaw(() -> PivotPos.INTAKE),
+                Commands.parallel(
+                        intake.setintakePower(0.3),
+                        index.setIndexPower(0.5),
+                        claw.setClawPower(1),
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke)), 
+            Commands.sequence(Commands.parallel(
+                intake.setintakePower(1).until(intake::getIntakeBreak),
+                intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(
+                        intake::propIntake)
+                .andThen(
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING).onlyIf(intake::propIntake)
+                                .alongWith(
+                                        intake.setintakePower(1).until(intake::getIntakeBreak)))), 
+            ele::getLimitSwitch)
         );
     }
 
     public Command intake() {
         return Commands.sequence(
-            Commands.parallel(
-                intake.setintakePower(1),
-                intakePivot.setIntakePos(()-> IntakePos.INTAKE)
-            ).until(intake::getIntakeBreak),
-            Commands.waitUntil(ele::atIntakeSetPoint),
-            ele.setElevatorPosition(0.17),
-            clawPivot.pivotClaw(() -> PivotPos.INTAKE),
-            Commands.parallel(
-                    ele.setElevatorPosition(0.17),
-                    intake.setintakePower(0.5),
-                    index.setIndexPower(0.4),
-                    claw.setClawPower(0.5),
-                    intakePivot.setIntakePos(() -> IntakePos.INTAKING)
-            ).until(claw::clawBroke)
-        );
+
+                Commands.parallel(
+                        intake.setintakePower(1).until(intake::getIntakeBreak),
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(
+                                intake::propIntake)
+                        .andThen(
+                                intakePivot.setIntakePos(() -> IntakePos.INTAKING).onlyIf(intake::propIntake)
+                                        .alongWith(
+                                                intake.setintakePower(1).until(intake::getIntakeBreak))),
+                Commands.waitUntil(intake::getIntakeBreak),
+                ele.toHeightCoral(() -> EleHeight.INTAKE),
+                clawPivot.pivotClaw(() -> PivotPos.INTAKE),
+                Commands.parallel(
+                        intake.setintakePower(0.3),
+                        index.setIndexPower(0.5),
+                        claw.setClawPower(1),
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke));
     }
 
     public Command stow() {
-        return Commands.either(
-            Commands.sequence(
-                //Commands.waitUntil(clawPivot::clawClear),
-                clawPivot.setClawPivotAngle(PivotPos.L2),
-                ele.setElevatorPosition(0).until(ele::elevatorReset),
-                intakePivot.setIntakePos(() -> IntakePos.STOW)
-            ),
-            Commands.sequence(
-                //Commands.waitUntil(clawPivot::clawClear),
-                clawPivot.setClawPivotAngle(PivotPos.INTAKE),
-                ele.setElevatorPosition(0),
-                intakePivot.setIntakePos(() -> IntakePos.STOW)
-            ),
-            claw::clawBroke
-        );
+                return Commands.sequence(
+                        // Commands.waitUntil(clawPivot::clawClear),
+                        clawPivot.setClawPivotAngle(PivotPos.L2),
+                        ele.setElevatorPosition(0).until(ele::elevatorReset),
+                        intakePivot.setIntakePos(() -> IntakePos.STOW));
     }
 
     public Command score() {
         return Commands.sequence(
-                claw.setClawPower(-0.5) 
-            );
+                claw.setClawPower(-0.5));
     }
 
-    public Command setL4() {            
+    public Command outtakeAlgae() {
         return Commands.sequence(
-            ele.toHeightCoral(()-> EleHeight.L4),
-            clawPivot.pivotClaw(() -> PivotPos.L4)
+                claw.setClawPower(0.5));
+    }
+
+    public Command setL4() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.L4),
+                clawPivot.pivotClaw(() -> PivotPos.L4));
+    }
+
+    public Command setL3() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.L3),
+                clawPivot.pivotClaw(() -> PivotPos.L3));
+    }
+
+    public Command setL2() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.L2),
+                clawPivot.pivotClaw(() -> PivotPos.L2));
+    }
+
+    public Command setL2Algae() {
+        return Commands.sequence(
+                ele.toHeightAlgae(() -> AlgaeHeight.L2),
+                clawPivot.pivotClaw(() -> PivotPos.Algae),
+                claw.intakeAlgae(-0.7));
+    }
+
+    public Command setL3Algae() {
+        return Commands.sequence(
+                ele.toHeightAlgae(() -> AlgaeHeight.L3),
+                clawPivot.pivotClaw(() -> PivotPos.Algae),
+                claw.intakeAlgae(-0.7));
+    }
+
+    public Command groundBall() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.RESET),
+                clawPivot.pivotClaw(() -> PivotPos.INTAKEBALL),
+                claw.intakeAlgae(-0.7));
+    }
+
+    public Command processor() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.INTAKE),
+                clawPivot.pivotClaw(() -> PivotPos.PROCESSOR));
+    }
+
+    public Command setBargeAlgae() {
+
+        return Commands.parallel(
+            claw.setClawPower(-0.5),
+            Commands.sequence(
+                ele.toHeightAlgae(() -> AlgaeHeight.BARGE),
+                clawPivot.pivotClaw(() -> PivotPos.BARGE),
+                Commands.waitUntil(clawPivot::atBarge)
+            )
         );
     }
 
-    public Command setL3() {            
+    public Command setProcessor() {
         return Commands.sequence(
-            ele.toHeightCoral(()-> EleHeight.L3),
-            clawPivot.pivotClaw(() -> PivotPos.L3)
+                ele.toHeightAlgae(() -> AlgaeHeight.PROCESSOR),
+                clawPivot.pivotClaw(() -> PivotPos.PROCESSOR));
+    }
+
+    public Command setL1() {
+        return Commands.sequence(
+                ele.toHeightCoral(() -> EleHeight.L1));
+    }
+
+    public Command fixIntake() {
+        return Commands.parallel(
+            intake.setintakePower(-0.5),
+            index.setIndexPower(-0.7),
+            claw.setClawPower(0.5),
+            clawPivot.pivotClaw(() -> PivotPos.INTAKE),
+            intakePivot.setIntakePos(() -> IntakePos.INTAKING)
+        ).withTimeout(0.2).andThen(
+            Commands.parallel(
+                intake.setintakePower(0.5),
+                index.setIndexPower(0.5),
+                claw.setClawPower(0.5)
+            ).until(claw::clawBroke)
         );
     }
 
-    public Command setL2() {            
-        return Commands.sequence(
-            ele.toHeightCoral(()-> EleHeight.L2),
-            clawPivot.pivotClaw(() -> PivotPos.L2)
-        );
+    public Command setReefLvl() {
+        return Commands.defer(
+                () -> {
+
+                    Command reefPosition = setL2();
+                    if (reefLvl == 1) {
+                        reefPosition = setL1();
+                    } else if (reefLvl == 2) {
+                        reefPosition = setL2();
+                    } else if (reefLvl == 3) {
+                        reefPosition = setL3();
+                    } else if (reefLvl == 4) {
+                        reefPosition = setL4();
+                    }
+                    return Commands.sequence(
+                            Commands.waitUntil(claw::clawBroke),
+                            Commands.waitUntil(clawPivot::clawClear),
+                            reefPosition
+                            );
+                },
+                Set.of(ele, clawPivot, claw));
     }
 
-    public Command setL2Algae() {            
-        return Commands.sequence(
-            ele.toHeightAlgae(()-> AlgaeHeight.L2),
-            clawPivot.pivotClaw(() -> PivotPos.L2)
-        );
-    }
-
-    public Command setL3Algae() {            
-        return Commands.sequence(
-            ele.toHeightAlgae(()-> AlgaeHeight.L3),
-            clawPivot.pivotClaw(() -> PivotPos.BARGE)
-        );
-    }
-
-    public Command setBargeAlgae() {            
-        return Commands.sequence(
-            ele.toHeightAlgae(()-> AlgaeHeight.BARGE),
-            clawPivot.pivotClaw(() -> PivotPos.L2)
-        );
-    }
-
-    public Command setProcessor() {            
-        return Commands.sequence(
-            ele.toHeightAlgae(()-> AlgaeHeight.PROCESSOR),
-            clawPivot.pivotClaw(() -> PivotPos.L2)
-        );
-    }
-
-    public Command setL1() {            
-        return Commands.sequence(
-            ele.toHeightCoral(()-> EleHeight.L1)
-        );
-    }
-
-    public Command setReefLvl(CommandPS5Controller controller) {
+    public void setLvl(CommandPS5Controller controller) {
         final int povPosition = controller.getHID().getPOV();
-        Command reefPosition = setL4();
-            if (povPosition == 0) {
-                reefPosition = setL4();
-            } else if (povPosition == 90) {
-                reefPosition = setL3();
-            } else if (povPosition == 180) {
-                reefPosition = setL2();
-            } else if (povPosition == 270) {
-                reefPosition = setL1();
-            }
-            return Commands.sequence(
-                Commands.waitUntil(claw::clawBroke),
-                Commands.waitUntil(clawPivot::clawClear),
-                reefPosition
-            );
+        if (povPosition > -1) {
+        if (povPosition == 90) {
+            reefLvl = 1;
+        } else if (povPosition == 180) {
+            reefLvl = 2;
+        } else if (povPosition == 270) {
+            reefLvl = 3;
+        } else if (povPosition == 0) {
+            reefLvl = 4;
+        }
+        else {
+            reefLvl = 2;
+        }
     }
 
-    public Command setAlgaeLvl(CommandPS5Controller controller) {
-        final int povPosition = controller.getHID().getPOV();
-        Command reefPosition = setProcessor();
-            if (povPosition == 0) {
-                reefPosition = setBargeAlgae();
-            } else if (povPosition == 90) {
-                reefPosition = setL3Algae();
-            } else if (povPosition == 180) {
-                reefPosition = setL2Algae();
-            } else if (povPosition == 270) {
+        if (reefLvl < 1 || reefLvl > 4) {
+            reefLvl = 1;
+        }
+    }
+
+    public void printLvl() {
+        SmartDashboard.putNumber("Reef Lvl", reefLvl);
+    }
+
+    public Command setAlgaeLvl() {
+        return Commands.defer(() -> {
+            Command reefPosition = setProcessor();
+            if (reefLvl == 1) {
                 reefPosition = setProcessor();
+            } else if (reefLvl == 2) {
+                reefPosition = setL2Algae();
+            } else if (reefLvl == 3) {
+                reefPosition = setL3Algae();
+            } else if (reefLvl == 4) {
+                reefPosition = setBargeAlgae();
             }
             return Commands.sequence(
-                Commands.waitUntil(claw::clawBroke),
-                Commands.waitUntil(clawPivot::clawClear),
-                reefPosition
-            );
+                    Commands.waitUntil(claw::notClawBroke),
+                    reefPosition);
+        },
+                Set.of(ele, clawPivot, claw));
     }
 
     public Command readyToClimb() {
         return Commands.parallel(
-            intakePivot.setIntakePivotAngle(0.36),
-            clawPivot.setClawPivotAngle(0),
-            climb.setClimberAngle(-0.22)
-        );
+                intakePivot.setIntakePivotAngle(0.36),
+                clawPivot.setClawPivotAngle(0),
+                climb.setClimberAngle(-0.22));
     }
 
-    public Command intakeAlgae(){
+    public Command intakeAlgae() {
         return Commands.parallel(
-            setL3Algae(),
-            claw.setClawPower(-0.85)
-        );
+                setL3Algae(),
+                claw.setClawPower(-0.85));
     }
 
     public Command climb() {
         return Commands.parallel(
-            clawPivot.setClawPivotAngle(0),
-            climb.setClimberPower(0.37)
-                .until(climb::endClimbSeq).finallyDo(
-                    () -> climb.setAngle(0.25)
-                )
-        );
+                clawPivot.setClawPivotAngle(0),
+                climb.setClimberPower(0.37)
+                        .until(climb::endClimbSeq).finallyDo(
+                                () -> climb.setAngle(0.25)));
     }
 }
-
-

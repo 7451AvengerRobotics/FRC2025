@@ -44,6 +44,10 @@ public class Intake extends SubsystemBase {
         return !intakebreak.get();
     }
 
+    public boolean propIntake() {
+        return intake.getVelocity().getValueAsDouble() < 2 && (intake.getSupplyCurrent().getValueAsDouble() > 0 && intake.getSupplyCurrent().getValueAsDouble() < 3) ;
+    }
+
     public Command setintakePower(double power) {
         return runEnd(
             () -> {
@@ -58,5 +62,8 @@ public class Intake extends SubsystemBase {
     @Override
     public void periodic(){
         SmartDashboard.putBoolean("break", getIntakeBreak());
+        SmartDashboard.putBoolean("stall", propIntake());
+        SmartDashboard.putNumber("velo", intake.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("current", intake.getSupplyCurrent().getValueAsDouble());
     }
 }

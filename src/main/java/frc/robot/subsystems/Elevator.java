@@ -121,16 +121,16 @@ public class Elevator extends SubsystemBase {
 
     public boolean nearSetpoint(EleHeight height) {
         double diff = elevatorRequest.Position - height.rotations;
-        return Math.abs(diff) <= 0.01;
+        return Math.abs(diff) <= 0.03;
     }
 
     public boolean nearSetpoint(AlgaeHeight height) {
         double diff = elevatorRequest.Position - height.rotations;
-        return Math.abs(diff) <= 0.01;
+        return Math.abs(diff) <= 0.03;
     }
 
     public boolean atIntakeSetPoint() {
-        return Math.abs(elevator.getPosition().getValueAsDouble()  - EleHeight.INTAKE.rotations) < 0.01;
+        return nearSetpoint(EleHeight.INTAKE);
     }
 
     @Override
@@ -141,7 +141,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public enum EleHeight {
-        RESET(0),
+        RESET(-0.01),
         L1(0.5),
         L2(0),
         L3(1.5),
@@ -156,8 +156,8 @@ public class Elevator extends SubsystemBase {
     }
 
     public enum AlgaeHeight {
-        L2(0.5),
-        L3(1.98),
+        L2(1),
+        L3(2.05),
         BARGE(5.59),
         PROCESSOR(0);
 

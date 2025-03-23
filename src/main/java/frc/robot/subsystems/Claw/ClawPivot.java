@@ -95,13 +95,21 @@ public class ClawPivot extends SubsystemBase {
         return claw_pivot.getPosition().getValueAsDouble();
     }
 
+    public boolean atBarge() {
+        return nearSetpoint(PivotPos.BARGE);
+    }
+
+    public boolean atReset() {
+        return nearSetpoint(PivotPos.RESET);
+    }
+
     public boolean nearSetpoint(PivotPos pivot) {
         double diff = pivotRequest.Position - pivot.clawRotations;
         return Math.abs(diff) <= 0.01;
     }
 
     public boolean clawClear() {
-        return getClawPivotPosition() > 0.036;
+        return getClawPivotPosition() > 0.036 && getClawPivotPosition() < 0.5;
     }
 
     public boolean getClawVelo() {
@@ -124,11 +132,13 @@ public class ClawPivot extends SubsystemBase {
     public enum PivotPos {
         L2(0.45),
         L3(0.45),
-        L4(0.29),
+        L4(0.31),
         INTAKE(-0.003173828125),
-        BARGE(0.29),
+        BARGE(0.49),
         RESET(0),
-        PROCESSOR(0);
+        Algae(0.2),
+        INTAKEBALL(0.08),
+        PROCESSOR(0.03);
 
         public final double clawRotations;
 

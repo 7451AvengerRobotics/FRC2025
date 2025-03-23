@@ -70,6 +70,21 @@ public class IntakePivot extends SubsystemBase {
         intake_pivot.setControl(pivotRequest.withPosition(angle).withSlot(0));
     }
 
+    public void powerIntake(double power) {
+        intake_pivot.set(power);
+    }
+
+    public Command powerIntakeCmd(double power) {
+        return run(() -> {
+            this.powerIntake(power);
+        });
+    }
+    
+
+    public boolean raiseIntake() {
+        return intake_pivot.getPosition().getValueAsDouble() < 0.25;
+    }
+
     public Command setIntakePivotAngle(double angle) {
         return run(() -> {
             this.pivotIntake(angle);
@@ -103,7 +118,7 @@ public class IntakePivot extends SubsystemBase {
     
     public enum IntakePos {
         L1(0.1),
-        INTAKING(0.25),
+        INTAKING(0.2),
         INTAKE(0.35),
         STOW(0.05);
 

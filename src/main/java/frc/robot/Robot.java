@@ -129,6 +129,9 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
+    robotContainer.superStructure.setLvl(robotContainer.manip);
+    robotContainer.superStructure.printLvl();
+
 
   }
 

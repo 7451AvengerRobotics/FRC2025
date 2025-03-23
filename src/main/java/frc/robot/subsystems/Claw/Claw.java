@@ -11,6 +11,9 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,6 +42,8 @@ public class Claw extends SubsystemBase {
         motorConfig = new SparkFlexConfig();
 
         motorConfig.inverted(true);
+        motorConfig.idleMode(IdleMode.kBrake);
+        motorConfig.smartCurrentLimit(60);
 
         motorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
@@ -50,6 +55,10 @@ public class Claw extends SubsystemBase {
         .maxAcceleration(500, ClosedLoopSlot.kSlot0)
         .maxVelocity(6000, ClosedLoopSlot.kSlot0)
         .allowedClosedLoopError(1, ClosedLoopSlot.kSlot0);
+
+        motorConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(10).i(0).d(0).outputRange(-1, 1);
+
+        
 
         claw.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
@@ -79,7 +88,7 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean motorStall() {
-       return (claw.getOutputCurrent() > 50 && claw.getEncoder().getVelocity() == 0);
+       return (claw.getOutputCurrent() > 50 && (Math.abs(claw.getEncoder().getVelocity()) < 100));
     }
 
     public boolean notStalled() {
@@ -87,12 +96,9 @@ public class Claw extends SubsystemBase {
     }
 
     public void holdWhenStall() {
-
-        if (motorStall()) {
             double targetPosition = encoder.getPosition();
-            closedLoopController.setReference(targetPosition, ControlType.kMAXMotionPositionControl,
+            closedLoopController.setReference(targetPosition + 1000, ControlType.kMAXMotionPositionControl,
             ClosedLoopSlot.kSlot0);
-        }
 
     }
 
@@ -105,10 +111,7 @@ public class Claw extends SubsystemBase {
     public Command intakeAlgae(double power) {
         return
             setClawPower(power).until(this::motorStall).andThen(
-                Commands.defer(
-                    () -> setClawHold(), 
-                    Set.of(this)
-                )
+                setClawPower(-0.15)
             );
     }
 
@@ -116,6 +119,10 @@ public class Claw extends SubsystemBase {
     @Override
     public void periodic(){
         SmartDashboard.putBoolean("Claw Beam Break", clawBroke());
+        SmartDashboard.putBoolean("Claw Stall ", motorStall());
         SmartDashboard.putNumber("Claw Current", claw.getOutputCurrent());
+        SmartDashboard.putNumber("Claw Velo", claw.getEncoder().getVelocity());
+        SmartDashboard.putNumber("Claw pos", encoder.getPosition());
+        
     }
 }

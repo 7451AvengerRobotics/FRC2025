@@ -44,7 +44,7 @@ public class RobotConstants {
     
     public static class ElevatorConstants {
         public static final int kElevatorID = 35;
-        public static final double kElevatorGearRatio = 9;
+        public static final double kElevatorGearRatio = 12;
         public static final double elevatorkS = 0.144; // Add 0.25 V output to overcome static friction
         public static final double elevatorkV = 1; // A velocity target of 1 rps results in 0.12 V output
         public static final double elevatorkA = 0.01;// An acceleration of 1 rps/s requires 0.01 V output

@@ -19,6 +19,7 @@ import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
+import frc.robot.subsystems.Intake.IntakePivot.IntakePos;
 import frc.robot.subsystems.Swerve.*;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
@@ -55,7 +56,7 @@ public class RobotContainer {
   private final Vision vision;
   private final Drive drive;
   private final CommandPS5Controller controller = new CommandPS5Controller(1);
-  private final CommandPS5Controller manip = new CommandPS5Controller(2);
+  public final CommandPS5Controller manip = new CommandPS5Controller(2);
   private final Joystick buttonPannel = new Joystick(0);
   private final SendableChooser<Command> autoChooser1;
   private final AutoRoutines autos;
@@ -81,6 +82,7 @@ public class RobotContainer {
   Trigger scoreReq = new Trigger(intakeAlgae::getAsBoolean);
   Trigger L1req = new Trigger(intakeTrough::getAsBoolean);
   Trigger stowClaw = new Trigger(claw::clawBroke);
+  Trigger stallClaw = new Trigger(claw::motorStall);
   //Trigger holdingBall = new Trigger(claw::motorStall);
 
   public final SuperStructure superStructure;
@@ -169,7 +171,7 @@ public class RobotContainer {
         superStructure = new SuperStructure(
             intake, 
             intakePivot, 
-            index, 
+            index,
             elevator, 
             clawPivot, 
             claw, 
@@ -194,13 +196,13 @@ public class RobotContainer {
             .until(
                 intake::getIntakeBreak)
             .andThen(
-              new setLedColorCommand(led, 255, 255, 0))
+              new setLedColorCommand(led, 0, 255, 0))
             .until(
                 claw::clawBroke)
             .andThen(
                 new LedStrobeCommand(led, false).withTimeout(1))
             .andThen(
-                new setLedColorCommand(led, 0, 255, 0))
+                new setLedColorCommand(led, 255, 255, 255))
             .until(
                 claw::notClawBroke)
     );
@@ -208,7 +210,8 @@ public class RobotContainer {
 
   private void configureBindings() {
 
-    stowClaw.onTrue(superStructure.stow());
+    stowClaw.onTrue(superStructure.stow().andThen(claw.setClawPower(0.5).withTimeout(0.1)));
+    stallClaw.whileTrue(claw.setClawPower(-0.7).andThen(new setLedColorCommand(led, 0, 255, 255)));
 
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
@@ -235,65 +238,54 @@ public class RobotContainer {
             .ignoringDisable(true));
     
 
-    controller.R2().onTrue(superStructure.intake().andThen(superStructure.stow()));     
+    // intake
+    controller.R2().onTrue(superStructure.intake());
+
+    // fix intake
+    manip.triangle().onTrue(superStructure.fixIntake());
     
+    // right side score
     controller.R1().whileTrue(
         Commands.sequence(
             Commands.parallel(
-                drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
-                superStructure.setReefLvl(manip)
+                // drive.driveToClosestReefScoringFaceWithTranslate(
+                //     new Transform2d(new Translation2d(0.52, 0.15), new Rotation2d())),
+                superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score().until(claw::notClawBroke).andThen(drive.driveToClosestReefScoringFaceWithTranslate(
-                new Transform2d(new Translation2d(0.65, 0.15), new Rotation2d())))
+            superStructure.score().until(claw::notClawBroke)
         )
     ).onFalse(
-        superStructure.stow()
+        superStructure.resetEverything()
     );
 
+    // left side score
     controller.L1().whileTrue(
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
                     new Transform2d(new Translation2d(0.52, -0.21), new Rotation2d())
                 ),
-                superStructure.setReefLvl(manip)
+                superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.touchpad()),
-            superStructure.score().until(claw::notClawBroke).andThen(drive.driveToClosestReefScoringFaceWithTranslate(
-                new Transform2d(new Translation2d(0.65, -0.21), new Rotation2d())))
+            superStructure.score().until(claw::notClawBroke)
         )
     ).onFalse(
-        superStructure.resetEverything()
+        superStructure.resetEverything().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
+            new Transform2d(new Translation2d(0.65, -0.21), new Rotation2d())))
     );
 
-    controller.touchpad().whileTrue(
-        Commands.sequence(
-            Commands.parallel(
-                drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.48, 0), new Rotation2d(0))
-                ),
-                superStructure.setAlgaeLvl(manip)
-            )
-        )
-    ).onFalse(
-        superStructure.resetEverything()
-    );
-
-    controller.triangle().onTrue(
-        superStructure.setL2Algae()
+    // Algae
+    controller.touchpad().onTrue(
+            superStructure.setAlgaeLvl()
     );
 
     controller.square().onTrue(superStructure.resetEverything());
 
-    controller.cross().onTrue(
-        superStructure.setL3Algae()
-    );
-
-    controller.circle().onTrue(
-        superStructure.setL4()
-    );
+    // controller.cross().onTrue(
+    //     superStructure.setL3Algae()
+    // );
 
     controller.povDown().onTrue(
         superStructure.readyToClimb()
@@ -304,8 +296,9 @@ public class RobotContainer {
     );
 
     controller.L2().whileTrue(
-        superStructure.score()
+        Commands.either(superStructure.score(), superStructure.outtakeAlgae(), claw::clawBroke)
     );
+
   }
 
   /**
