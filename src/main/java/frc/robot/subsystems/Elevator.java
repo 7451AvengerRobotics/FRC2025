@@ -34,7 +34,7 @@ public class Elevator extends SubsystemBase {
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 40;
+        cfg.CurrentLimits.StatorCurrentLimit = 60;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
@@ -121,16 +121,24 @@ public class Elevator extends SubsystemBase {
 
     public boolean nearSetpoint(EleHeight height) {
         double diff = elevator.getPosition().getValueAsDouble() - height.rotations;
-        return Math.abs(diff) <= 0.03;
+        return Math.abs(diff) <= 0.05;
     }
 
     public boolean nearSetpoint(AlgaeHeight height) {
         double diff = elevator.getPosition().getValueAsDouble() - height.rotations;
-        return Math.abs(diff) <= 0.03;
+        return Math.abs(diff) <= 0.05;
     }
 
     public boolean atIntakeSetPoint() {
         return nearSetpoint(EleHeight.INTAKE);
+    }
+
+    public boolean dontStallClaw() {
+        return elevator.getPosition().getValueAsDouble() < 0.1;
+    }
+
+    public boolean safeToIntake() {
+        return elevator.getPosition().getValueAsDouble() < 1.5;
     }
 
     @Override
@@ -142,10 +150,10 @@ public class Elevator extends SubsystemBase {
 
     public enum EleHeight {
         RESET(-0.01),
-        L1(0.5),
+        L1(1),
         L2(0),
         L3(1.5),
-        INTAKE(0.2),
+        INTAKE(0.11),
         L4(4.9);
 
         public final double rotations;
@@ -159,7 +167,7 @@ public class Elevator extends SubsystemBase {
         L2(1),
         L3(2.05),
         BARGE(5.59),
-        PROCESSOR(0);
+        PROCESSOR(0.15);
 
         public final double rotations;
 

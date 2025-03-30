@@ -6,10 +6,13 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Index;
+import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
+import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
 import frc.robot.subsystems.Swerve.Drive;
@@ -22,9 +25,11 @@ public class AutoRoutines {
     private final Claw claw;
     private final Intake intake;
     private final Index index;
+    private final SuperStructure superStruc;
+    
 
     public AutoRoutines(Drive drive, Elevator elevator, ClawPivot clawPivot, IntakePivot intakePivot, Claw claw,
-            Intake intake, Index index) {
+            Intake intake, Index index, SuperStructure superStruc) {
         this.drive = drive;
         this.elevator = elevator;
         this.clawPivot = clawPivot;
@@ -32,7 +37,37 @@ public class AutoRoutines {
         this.claw = claw;
         this.intake = intake;
         this.index = index;
+        this.superStruc = superStruc;
     }
+
+    
+
+    public Command bargeSideLoli() {
+        Trigger stallClaw = new Trigger(claw::motorStall);
+        return Commands.sequence(
+                clawPivot.pivotClaw(() -> PivotPos.L2),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4),
+                Commands.parallel(
+                        drive.followPPPathCommand("Loli1").until(intake::getIntakeBreak),
+                                Commands.sequence(
+                                superStruc.resetEverything()
+                                )
+                                //superStruc.intake(stallClaw))
+                        ),
+                drive.followPPPathCommand("Score2"),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
+                    new Rotation2d())))
+                
+                
+                
+        );
+
+        
+    }
+
+
 
     public Command centerAuto() {
         return Commands.sequence(

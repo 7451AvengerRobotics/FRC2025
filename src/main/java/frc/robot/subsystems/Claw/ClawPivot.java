@@ -105,7 +105,7 @@ public class ClawPivot extends SubsystemBase {
 
     public boolean nearSetpoint(PivotPos pivot) {
         double diff = claw_pivot.getPosition().getValueAsDouble() - pivot.clawRotations;
-        return Math.abs(diff) <= 0.03;
+        return Math.abs(diff) <= 0.07;
     }
 
     public boolean clawClear() {
@@ -130,6 +130,7 @@ public class ClawPivot extends SubsystemBase {
     
 
     public enum PivotPos {
+        L1(0.07),
         L2(0.45),
         L3(0.45),
         L4(0.34),

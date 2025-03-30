@@ -62,8 +62,8 @@ public class FieldConstants {
                                                                                                // clockwise
 
         public static final Pose2d reef0 = new Pose2d(
-                Units.inchesToMeters(144.003),
-                Units.inchesToMeters(158.500),
+                Units.inchesToMeters(144.0945),
+                Units.inchesToMeters(158.6614),
                 Rotation2d.fromDegrees(180));
         public static final Pose2d reef1 = new Pose2d(
                 Units.inchesToMeters(160.373),

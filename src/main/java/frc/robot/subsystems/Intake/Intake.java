@@ -1,5 +1,7 @@
 package frc.robot.subsystems.Intake;
 
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -21,7 +23,7 @@ public class Intake extends SubsystemBase {
 
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 40;
+        cfg.CurrentLimits.StatorCurrentLimit = 60;
 
         StatusCode status = StatusCode.StatusCodeNotInitialized;
         for (int i = 0; i < 5; ++i) {
@@ -44,8 +46,12 @@ public class Intake extends SubsystemBase {
         return !intakebreak.get();
     }
 
+    public boolean switchIntake() {
+        return this.getIntakeBreak() || this.propIntake();
+    }
+
     public boolean propIntake() {
-        return intake.getVelocity().getValueAsDouble() < 2 && (intake.getSupplyCurrent().getValueAsDouble() > 0 && intake.getSupplyCurrent().getValueAsDouble() < 3) ;
+        return Math.abs(intake.getVelocity().getValueAsDouble()) < 2 && (intake.getStatorCurrent().getValueAsDouble() > 50 && intake.getStatorCurrent().getValueAsDouble() < 60) ;
     }
 
     public Command setintakePower(double power) {
@@ -64,6 +70,6 @@ public class Intake extends SubsystemBase {
         SmartDashboard.putBoolean("break", getIntakeBreak());
         SmartDashboard.putBoolean("stall", propIntake());
         SmartDashboard.putNumber("velo", intake.getVelocity().getValueAsDouble());
-        SmartDashboard.putNumber("current", intake.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("current", intake.getStatorCurrent().getValueAsDouble());
     }
 }

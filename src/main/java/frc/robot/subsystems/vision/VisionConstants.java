@@ -27,24 +27,24 @@ public class VisionConstants {
 
   // Camera names, must match names configured on coprocessor
   public static String limelight1Camera = "Limelight2";
-  public static String limelight2Camera = "Limelight";
-  public static String camera0Name = "FrontLeft";
-  public static String camera1Name = "FrontRight";
+  public static String frontRight = "FrontRight";
+  public static String backRight = "BackRight";
+  public static String backLeft = "BackLeft";
 
   // Robot to camera transforms
   // (Not used by Limelight, configure in web UI instead)
   public static Transform3d limelight3Transform3d =
     new Transform3d(Units.inchesToMeters(-12.15), Units.inchesToMeters(5.516), Units.inchesToMeters(5.887), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(190)));
-  public static Transform3d limelight2Transform3d =
-    new Transform3d(Units.inchesToMeters(-12.15), Units.inchesToMeters(-5.516), Units.inchesToMeters(5.887), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-26), Units.degreesToRadians(170)));
   public static Transform3d frontRightTransform3d =
-    new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(-12.48), Units.inchesToMeters(8.371), 
-    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(-30)));
-  public static Transform3d frontLeftTransform3d =
     new Transform3d(Units.inchesToMeters(11.024), Units.inchesToMeters(12.48), Units.inchesToMeters(8.371), 
     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-28.125), Units.degreesToRadians(30)));
+  public static Transform3d backLeftTransform3d =
+    new Transform3d(Units.inchesToMeters(-11.554), Units.inchesToMeters(12.25), Units.inchesToMeters(8.371), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-9.232), Units.degreesToRadians(200)));
+  public static Transform3d backRightTransform3d =
+    new Transform3d(Units.inchesToMeters(-11.554), Units.inchesToMeters(-12.25), Units.inchesToMeters(8.371), 
+    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-9.232), Units.degreesToRadians(160)));
 
   // Basic filtering thresholds
   public static double maxAmbiguity = 0.15;
@@ -53,7 +53,7 @@ public class VisionConstants {
   // Standard deviation baselines, for 1 meter distance and 1 tag
   // (Adjusted automatically based on distance and # of tags)
   public static double linearStdDevBaseline = 0.2; // Meters
-  public static double angularStdDevBaseline = 0.1; // Radians
+  public static double angularStdDevBaseline = 0.6; // Radians
 
   // Standard deviation multipliers for each camera
   // (Adjust to trust some cameras more than others)

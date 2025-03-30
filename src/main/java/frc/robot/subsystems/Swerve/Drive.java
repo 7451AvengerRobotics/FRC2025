@@ -35,17 +35,20 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Swerve.SimConstants.Mode;
 import frc.robot.subsystems.Swerve.Controller.HolonomicDriveWithPIDController;
 import frc.robot.Robot;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.generated.TunerConstantsNew;
+import frc.robot.util.ControllerUtil;
 import frc.robot.util.LocalADStarAK;
 
 import java.util.Arrays;
@@ -90,11 +93,12 @@ public class Drive extends SubsystemBase {
 
   private final PIDController xController = new PIDController(4.0, 0.0, 0.0);
   private final PIDController yController = new PIDController(4.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(5, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(4, 0.0, 0.0);
 
   private boolean holonomicControllerActive = false;
   private Pose2d holonomicPoseTarget = new Pose2d();
   private final HolonomicDriveWithPIDController holonomicDriveWithPIDController;
+  private final HolonomicDriveWithPIDController holonomicDriveWithPIDControllerBarge;
   private final SysIdRoutine sysId;
 
   static final Lock odometryLock = new ReentrantLock();
@@ -129,10 +133,20 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, 3, TunerConstantsNew.BackRight);
 
     this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-        new PIDController(5, 0, 0),
-        new PIDController(5, 0, 0),
+        new PIDController(4, 0, 0),
+        new PIDController(4, 0, 0),
         headingController,
-        new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)));
+        0.5,
+        new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)),
+        1);
+    
+    this.holonomicDriveWithPIDControllerBarge = new HolonomicDriveWithPIDController(
+        new PIDController(4, 0, 0),
+        new PIDController(4, 0, 0),
+        headingController,
+        0.35,
+        new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)),
+        0.5);
 
     SmartDashboard.putData("Field", m_field);
 
@@ -150,7 +164,7 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(10, 0.0, 0.0), new PIDConstants(10, 0.0, 0.0)),
+            new PIDConstants(4, 0.0, 0.0), new PIDConstants(4, 0.0, 0.0)),
         PP_CONFIG,
         () -> {
           var alliance =  DriverStation.getAlliance();
@@ -188,6 +202,7 @@ public class Drive extends SubsystemBase {
     // } else {
     //   m_field.setRobotPose(getPose());
     // }
+    SmartDashboard.putNumber("Closest Reef", getClosestReefFace());
 
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
@@ -455,6 +470,42 @@ public class Drive extends SubsystemBase {
         runOnce(this::stop)).finallyDo(() -> holonomicControllerActive = false);
   }
 
+  public Command driveToPoseBarge(Pose2d pose) {
+    return Commands.sequence(
+        runOnce(() -> {
+          holonomicControllerActive = true;
+          holonomicDriveWithPIDControllerBarge.reset(getPose(), getRobotRelativeSpeeds());
+        }),
+        run(() -> {
+          this.holonomicPoseTarget = pose;
+          runVelocity(holonomicDriveWithPIDControllerBarge.calculate(getPose(), holonomicPoseTarget));
+        }).until(holonomicDriveWithPIDControllerBarge::atReference),
+        runOnce(this::stop)).finallyDo(() -> holonomicControllerActive = false);
+  }
+
+  public Command driveToBarge() {
+    return Commands.defer(
+      ()-> {
+      double currentPoseY = getPose().getY() ;
+      double xToGo = 7.5565;
+      //TODO add red side;
+      Pose2d toGo = new Pose2d(xToGo, currentPoseY, new Rotation2d(0));
+      return driveToPose(toGo);
+
+      }, 
+      Set.of(this)
+    );
+  }
+
+  public Command driveforwardBargeScore(double xValue) {
+    return Commands.defer(
+      () -> {
+        return driveToPoseBarge(new Pose2d(xValue, getPose().getY(), new Rotation2d(0)));
+      }, 
+      Set.of(this)
+      );
+  }
+
   public Command followPPPathCommand(String pathName) {
     return Commands.defer(
       () -> {
@@ -514,6 +565,21 @@ public class Drive extends SubsystemBase {
     return closestReef;
   }
 
+  public int getClosestReefFace() {
+    Pose2d closestReef = FieldConstants.Reef.reef0;
+    int indexOf = 0;
+    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean()
+        ? Arrays.asList(FieldConstants.Reef.redReefs)
+        : Arrays.asList(FieldConstants.Reef.blueReefs);
+    for (int i = 0; i < reefCenterPosesList.size(); i++) {
+      if (getDistance(reefCenterPosesList.get(i)) < getDistance(closestReef)) {
+        closestReef = reefCenterPosesList.get(i);
+        indexOf = i;
+      }
+    }
+    return indexOf;
+  }
+
   public Command driveToClosestReefScoringFace() {
     final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean()
         ? Arrays.asList(FieldConstants.Reef.redReefs)
@@ -527,6 +593,22 @@ public class Drive extends SubsystemBase {
           return driveToPose(nearestCoralSide);
         },
         Set.of(this));
+
+  }
+
+  public Command driveToClosestReefScoringFaceWithTranslate(Transform2d transform2d, CommandPS5Controller controller) {
+    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean() ? Arrays.asList(FieldConstants.Reef.redReefs)
+    : Arrays.asList(FieldConstants.Reef.blueReefs);
+    return Commands.defer(
+        () -> {
+
+          final Pose2d currentPose = getPose();
+          final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
+          Pose2d drivePose = nearestCoralSide.plus(transform2d);
+
+          return driveToPose(drivePose);
+        },
+        Set.of(this)).finallyDo(() -> ControllerUtil.rumbleForDurationCommand(controller.getHID(), RumbleType.kBothRumble, 0.5, 1.0));
 
   }
 

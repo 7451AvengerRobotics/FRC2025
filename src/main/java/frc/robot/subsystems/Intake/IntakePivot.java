@@ -108,8 +108,16 @@ public class IntakePivot extends SubsystemBase {
 
     public boolean nearSetpoint(IntakePos pos) {
         double diff = intake_pivot.getPosition().getValueAsDouble() - pos.intakeRotations;
-        return Math.abs(diff) <= 0.01;
+        return Math.abs(diff) <= 0.05;
     } 
+
+    public boolean atIntaking() {
+        return nearSetpoint(IntakePos.INTAKING);
+    }
+
+    public boolean atIntake() {
+        return nearSetpoint(IntakePos.INTAKE);
+    }
 
     @Override
     public void periodic(){

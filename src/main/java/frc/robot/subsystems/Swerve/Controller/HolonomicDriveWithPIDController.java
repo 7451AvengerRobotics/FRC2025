@@ -9,12 +9,16 @@ public class HolonomicDriveWithPIDController {
     private final PIDController xController;
     private final PIDController yController;
     private final PIDController rotationController;
+    private final double scale;
+    private final double rotationScale;
 
     public HolonomicDriveWithPIDController(
         final PIDController xController,
         final PIDController yController,
         final PIDController rotationController,
-        final Pose2d poseTolerance
+        final double scale,
+        final Pose2d poseTolerance,
+        final double rotationScale
     ) {
         this.xController = xController;
         this.xController.setTolerance(poseTolerance.getX(), poseTolerance.getX() * 1.5);
@@ -24,6 +28,9 @@ public class HolonomicDriveWithPIDController {
 
         this.rotationController = rotationController;
         this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
+
+        this.scale = scale;
+        this.rotationScale = rotationScale;
     }
 
     public void reset(final Pose2d currentPose, final ChassisSpeeds robotRelativeSpeeds) {
@@ -53,9 +60,9 @@ public class HolonomicDriveWithPIDController {
         );
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
-                xFeedback,
-                yFeedback,
-                rotationFeedback,
+                xFeedback*scale,
+                yFeedback*scale,
+                rotationFeedback*rotationScale,
                 currentPose.getRotation()
         );
 

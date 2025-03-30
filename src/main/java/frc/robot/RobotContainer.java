@@ -19,24 +19,30 @@ import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
-import frc.robot.subsystems.Intake.IntakePivot.IntakePos;
 import frc.robot.subsystems.Swerve.*;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.util.ControllerUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import java.util.Set;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -76,15 +82,13 @@ public class RobotContainer {
   JoystickButton L2 = new JoystickButton(buttonPannel, ButtonConstants.L2);
   JoystickButton intakeAlgae = new JoystickButton(buttonPannel, ButtonConstants.intakeAlgae);
 
-  Trigger L2req = new Trigger(L2::getAsBoolean);
-  Trigger L3req = new Trigger(L3::getAsBoolean);
-  Trigger L4req = new Trigger(L4::getAsBoolean);
-  Trigger scoreReq = new Trigger(intakeAlgae::getAsBoolean);
-  Trigger L1req = new Trigger(intakeTrough::getAsBoolean);
   Trigger stowClaw = new Trigger(claw::clawBroke);
   Trigger stallClaw = new Trigger(claw::motorStall);
-  //Trigger holdingBall = new Trigger(claw::motorStall);
-
+  Trigger eleLow = new Trigger(elevator::dontStallClaw);
+  Trigger realRobot = new Trigger(Robot::isReal);
+  Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
+            .and(DriverStation::isFMSAttached)
+            .and(RobotModeTriggers.teleop());
   public final SuperStructure superStructure;
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -105,10 +109,10 @@ public class RobotContainer {
             new ModuleIOTalonFX(TunerConstantsNew.BackRight));
         vision = new Vision(
             drive::addVisionMeasurement,
-            new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d),
-            new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.frontRightTransform3d),
-            new VisionIOPhotonVision(VisionConstants.limelight2Camera, VisionConstants.limelight3Transform3d),
-            new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d)
+            new VisionIOPhotonVision(VisionConstants.backRight, VisionConstants.backRightTransform3d),
+            new VisionIOPhotonVision(VisionConstants.backLeft, VisionConstants.backLeftTransform3d),
+            new VisionIOPhotonVision(VisionConstants.frontRight, VisionConstants.frontRightTransform3d)
+            //new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d)
         );
 
         superStructure = new SuperStructure(
@@ -134,7 +138,7 @@ public class RobotContainer {
             new ModuleIOSim(TunerConstantsNew.BackRight));
         vision = new Vision(
             drive::addVisionMeasurement,
-            new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.frontLeftTransform3d,
+            new VisionIOPhotonVisionSim(VisionConstants.backRight, VisionConstants.backRightTransform3d,
                 drive::getPose));
 
         superStructure = new SuperStructure(
@@ -182,17 +186,26 @@ public class RobotContainer {
 
     }
 
-    autos = new AutoRoutines(drive, elevator, clawPivot, intakePivot, claw, intake, index);
+    autos = new AutoRoutines(drive, elevator, clawPivot, intakePivot, claw, intake, index, superStructure);
     autoChooser1 = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Mode", autoChooser1);
     
 
     configureBindings();
     configAutos();
-    
 
-    led.setDefaultCommand(
-        new setLedColorCommand(led, 255, 255, 0)
+//claw.setDefaultCommand(claw.setClawPower(0).until(claw::motorStall).andThen(claw.setClawPower(-0.3)).andThen(new setLedColorCommand(led, 0, 255, 255)));
+  }
+
+  private void configureBindings() {
+    endgameTrigger.onTrue(ControllerUtil.rumbleForDurationCommand(
+                controller.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
+        );
+
+    stowClaw.onTrue(superStructure.stow());
+    stallClaw.and(eleLow.negate()).whileTrue(new setLedColorCommand(led, 0, 255, 200));
+    led.setDefaultCommand((
+        new setLedColorCommand(led, 255, 0, 0)
             .until(
                 intake::getIntakeBreak)
             .andThen(
@@ -205,20 +218,17 @@ public class RobotContainer {
                 new setLedColorCommand(led, 255, 255, 255))
             .until(
                 claw::notClawBroke)
-    );
-  }
-
-  private void configureBindings() {
-
-    stowClaw.onTrue(superStructure.stow().andThen(claw.setClawPower(0.5).withTimeout(0.1)));
-    stallClaw.whileTrue(claw.setClawPower(-0.7).andThen(new setLedColorCommand(led, 0, 255, 255)));
+        ));
+    
 
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
             () -> -controller.getLeftY() * 0.85,
             () -> -controller.getLeftX() * 0.85,
-            () -> -controller.getRightX() * 0.7));
+            () -> -controller.getRightX() * 0.7
+        )
+    );
 
     // Switch to X pattern when X button is pressed
     controller.PS().and(controller.touchpad()).onTrue(
@@ -233,30 +243,53 @@ public class RobotContainer {
             () -> drive.setPose(
                 new Pose2d(
                     drive.getPose().getTranslation(),
-                    new Rotation2d())),
-            drive)
-            .ignoringDisable(true));
+                    new Rotation2d()
+                )
+            ),
+            drive
+        ).ignoringDisable(true)
+    );
     
 
     // intake
-    controller.R2().onTrue(superStructure.intake());
+    controller.R2().onTrue(
+        Commands.defer(
+            ()-> superStructure.intake(stallClaw), 
+            Set.of(intake))
+            .andThen(
+                superStructure.resetEverything()
+            )
+            .andThen(
+                new setLedColorCommand(led, 255, 255, 255)
+            )
+    );
 
     // fix intake
-    manip.triangle().onTrue(superStructure.fixIntake());
+    manip.triangle().onTrue(
+        superStructure.fixIntake().andThen(superStructure.resetEverything())
+    );
+
+    controller.triangle().whileTrue(drive.driveToBarge());
     
     // right side score
     controller.R1().onTrue(
         Commands.sequence(
             Commands.parallel(
-                // drive.driveToClosestReefScoringFaceWithTranslate(
-                //     new Transform2d(new Translation2d(0.58, 0.15), new Rotation2d())),
+                drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(new Translation2d(0.69, 0.13), 
+                    new Rotation2d()
+                ),
+                manip),
                 superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.R2()),
-            superStructure.score().until(claw::notClawBroke)
+            superStructure.score()
         )
     ).onFalse(
-        superStructure.resetEverything()
+        Commands.sequence(
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            superStructure.resetEverything()
+        )
     );
 
     // left side score
@@ -264,24 +297,83 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.58, -0.21), new Rotation2d())
+                    new Transform2d(
+                        new Translation2d(0.69, -0.21),
+                        new Rotation2d()
+                    ),
+                    manip
                 ),
                 superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.R2()),
-            superStructure.score().until(claw::notClawBroke)
+            superStructure.score()
         )
     ).onFalse(
-        superStructure.resetEverything().andThen(drive.driveToClosestReefScoringFaceWithTranslate(
-            new Transform2d(new Translation2d(0.65, -0.21), new Rotation2d())))
+        Commands.sequence(
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            superStructure.resetEverything()
+        )
     );
 
     // Algae
-    controller.touchpad().onTrue(
-            superStructure.setAlgaeLvl()
+    controller.touchpad().whileTrue(
+            Commands.defer(() -> 
+                Commands.parallel(
+                    drive.driveToClosestReefScoringFaceWithTranslate(
+                        new Transform2d(
+                            new Translation2d(0.63, 0),
+                            new Rotation2d()
+                        ),
+                        manip
+                    ).withTimeout(2),
+                    superStructure.autoSetAlgaeHeight(drive.getClosestReefFace())),
+                    Set.of(drive)
+            ).andThen(claw.setClawPower(-0.5))
+    ).onFalse(
+        Commands.defer(
+            () -> superStructure.autoSetAlgaeHeight(
+                drive.getClosestReefFace()
+            ),
+            Set.of(claw))
     );
 
-    controller.square().onTrue(superStructure.resetEverything());
+    
+
+    manip.PS().onTrue(
+        claw.setClawPower(-0.3)
+    );
+
+    // manip.square().whileTrue(
+    //     Commands.parallel(
+    //         claw.setClawPower(-0.5),
+    //         Commands.sequence(
+    //             superStructure.setBargeAlgae(),
+    //             drive.driveforwardBargeScore(7.86))
+    //         ),
+    //         Commands.waitUntil(manip.R2()),
+    //         superStructure.score()
+    // );
+
+    manip.square().whileTrue(
+        Commands.sequence(
+        Commands.parallel(
+                drive.driveforwardBargeScore(7.86),
+                superStructure.setBargeAlgae()
+        )
+        )
+    );
+    
+    manip.circle().onTrue(
+        superStructure.setProcessor()
+    );
+
+    controller.circle().onTrue(
+        superStructure.setReefLvl()
+    );
+
+    controller.square().onTrue(
+        superStructure.resetEverything()
+    );
 
     controller.povDown().onTrue(
         superStructure.readyToClimb()
@@ -292,7 +384,27 @@ public class RobotContainer {
     );
 
     controller.L2().whileTrue(
-        Commands.either(superStructure.score(), superStructure.outtakeAlgae(), claw::clawBroke)
+        Commands.either(
+            superStructure.score(),
+            superStructure.outtakeAlgae(),
+            claw::clawBroke)
+    );
+
+    manip.touchpad().whileTrue(
+        Commands.sequence(
+            Commands.parallel(
+                drive.driveToClosestReefScoringFaceWithTranslate(
+                    new Transform2d(
+                        new Translation2d(0.61, 0),
+                        new Rotation2d()
+                    ),
+                    manip
+                ),
+                superStructure.setL1()
+            ),
+            Commands.waitUntil(manip.R2()),
+            superStructure.scoreL1()
+        )
     );
 
   }
@@ -314,5 +426,6 @@ public class RobotContainer {
     autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
     autoChooser1.addOption("red Test", autos.redTest());
     autoChooser1.addOption("Center Auto", autos.centerAuto());
+    autoChooser1.addOption("BargeLoli", autos.bargeSideLoli());
   }
 }

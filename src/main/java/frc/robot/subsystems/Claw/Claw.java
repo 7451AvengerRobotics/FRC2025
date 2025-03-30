@@ -1,7 +1,5 @@
 package frc.robot.subsystems.Claw;
 
-import java.util.Set;
-
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -17,7 +15,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants.*;
 
@@ -88,7 +85,7 @@ public class Claw extends SubsystemBase {
     }
 
     public boolean motorStall() {
-       return (claw.getOutputCurrent() > 50 && (Math.abs(claw.getEncoder().getVelocity()) < 100));
+       return (claw.getOutputCurrent() > 45 && this.notClawBroke() && claw.getEncoder().getVelocity() > -1000 && claw.getEncoder().getVelocity() <= 0);
     }
 
     public boolean notStalled() {
