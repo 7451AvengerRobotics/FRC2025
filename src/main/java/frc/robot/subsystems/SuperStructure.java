@@ -73,51 +73,62 @@ public class SuperStructure {
     }
 
     public Command intake(Trigger clawStall) {
-        return Commands.sequence(
-                Commands.either(
-                        intakeDown(),
-                        Commands.parallel(
-                            claw.setClawPower(-1),
+
+        return Commands.defer(
+            () -> {
+                return Commands.sequence(
+                    Commands.either(
+                            intakeDown(),
                             Commands.parallel(
-                                intake.setintakePower(1).until(intake::getIntakeBreak),
-                                intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
-                                .andThen(
-                                    intakePivot.setIntakePos(() -> IntakePos.INTAKING)
-                                    .onlyIf(intake::propIntake)
-                                    .alongWith(
-                                        intake.setintakePower(1).until(intake::getIntakeBreak)))
+                                claw.setClawPower(-1),
+                                Commands.parallel(
+                                    intake.setintakePower(1).until(intake::getIntakeBreak),
+                                    intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
                                     .andThen(
-                                        intakePivot.setIntakePos(() -> IntakePos.STOW)
-                                    )
-                        ),
-                        clawStall.negate().and(ele::safeToIntake))
-                );
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)
+                                        .onlyIf(intake::propIntake)
+                                        .alongWith(
+                                            intake.setintakePower(1).until(intake::getIntakeBreak)))
+                                        .andThen(
+                                            intakePivot.setIntakePos(() -> IntakePos.STOW)
+                                        )
+                            ),
+                            clawStall.negate().and(ele::safeToIntake))
+                    );
+            }, 
+        Set.of(claw, clawPivot, intakePivot, intake, index, ele));
+
     }
 
     
 
     public Command intakeDown() {
-        return Commands.sequence(
-                Commands.parallel(
-                        intake.setintakePower(1).until(intake::getIntakeBreak),
-                        intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(
-                                intake::propIntake)
-                        .andThen(
-                                intakePivot.setIntakePos(() -> IntakePos.INTAKING).onlyIf(intake::propIntake)
-                                        .alongWith(
-                                                intake.setintakePower(1).until(intake::getIntakeBreak))),
-                Commands.waitUntil(intake::getIntakeBreak),
-                Commands.parallel(
-                    ele.toHeightCoral(() -> EleHeight.INTAKE),
-                    clawPivot.pivotClaw(() -> PivotPos.INTAKE)
-                ),
-                Commands.waitUntil(ele::atIntakeSetPoint),
-                Commands.parallel(
-                        intake.setintakePower(0.3),
-                        index.setIndexPower(0.4),
-                        claw.setClawPower(0.85),
-                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke));
-    }
+        return Commands.defer(
+            () -> {
+                return Commands.sequence(
+                    Commands.parallel(
+                            intake.setintakePower(1).until(intake::getIntakeBreak),
+                            intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(
+                                    intake::propIntake)
+                            .andThen(
+                                    intakePivot.setIntakePos(() -> IntakePos.INTAKING).onlyIf(intake::propIntake)
+                                            .alongWith(
+                                                    intake.setintakePower(1).until(intake::getIntakeBreak))),
+                    Commands.waitUntil(intake::getIntakeBreak),
+                    Commands.parallel(
+                        ele.toHeightCoral(() -> EleHeight.INTAKE),
+                        clawPivot.pivotClaw(() -> PivotPos.INTAKE)
+                    ),
+                    Commands.waitUntil(ele::atIntakeSetPoint),
+                    Commands.parallel(
+                            intake.setintakePower(0.3),
+                            index.setIndexPower(0.4),
+                            claw.setClawPower(0.85),
+                            intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke));
+                }, 
+                    Set.of(claw, intake, ele, clawPivot, intakePivot, index)
+            );
+        }
 
     public Command stow() {
         return Commands.sequence(
@@ -264,7 +275,7 @@ public class SuperStructure {
         }
 
         if (reefLvl < 1 || reefLvl > 4) {
-            reefLvl = 1;
+            reefLvl = 4;
         }
     }
 

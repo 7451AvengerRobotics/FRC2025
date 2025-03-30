@@ -32,7 +32,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -269,7 +268,6 @@ public class RobotContainer {
         superStructure.fixIntake().andThen(superStructure.resetEverything())
     );
 
-    controller.triangle().whileTrue(drive.driveToBarge());
     
     // right side score
     controller.R1().onTrue(
@@ -337,30 +335,25 @@ public class RobotContainer {
             Set.of(claw))
     );
 
-    
+        //barge
+    manip.square().whileTrue(
+        Commands.sequence(
+            Commands.parallel(
+                drive.driveFromCurrentPose(7.86),
+                superStructure.setBargeAlgae()
+            ),
+        Commands.waitUntil(manip.R2()),
+            superStructure.outtakeAlgae()
+        )
+    ).onFalse(
+        Commands.sequence(
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            superStructure.resetEverything()
+        )
+    );
 
     manip.PS().onTrue(
         claw.setClawPower(-0.3)
-    );
-
-    // manip.square().whileTrue(
-    //     Commands.parallel(
-    //         claw.setClawPower(-0.5),
-    //         Commands.sequence(
-    //             superStructure.setBargeAlgae(),
-    //             drive.driveforwardBargeScore(7.86))
-    //         ),
-    //         Commands.waitUntil(manip.R2()),
-    //         superStructure.score()
-    // );
-
-    manip.square().whileTrue(
-        Commands.sequence(
-        Commands.parallel(
-                drive.driveforwardBargeScore(7.86),
-                superStructure.setBargeAlgae()
-        )
-        )
     );
     
     manip.circle().onTrue(
@@ -419,13 +412,6 @@ public class RobotContainer {
   }
 
   public void configAutos() {
-    autoChooser1.addOption("Processor Side L4 Coral ", autos.processorSide2L4Coral());
-    autoChooser1.addOption("Processor Side L2 Coral ", autos.processorSide2L2Coral());
-    autoChooser1.addOption("Processor Red Side L2 Coral ", autos.processorRedSide2L2Coral());
-    autoChooser1.addOption("Barge Score 1 L2 1 L4", autos.bargeSide2L2Coral());
-    autoChooser1.addOption("Processor Side 3 L2", autos.processorSide3L2Coral());
-    autoChooser1.addOption("red Test", autos.redTest());
-    autoChooser1.addOption("Center Auto", autos.centerAuto());
     autoChooser1.addOption("BargeLoli", autos.bargeSideLoli());
   }
 }

@@ -1,6 +1,5 @@
 package frc.robot.subsystems.Intake;
 
-import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;

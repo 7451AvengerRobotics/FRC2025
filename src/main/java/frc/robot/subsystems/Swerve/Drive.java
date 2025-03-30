@@ -11,8 +11,6 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
-
-import choreo.trajectory.SwerveSample;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -90,9 +88,6 @@ public class Drive extends SubsystemBase {
           Math.hypot(TunerConstantsNew.BackRight.LocationX, TunerConstantsNew.BackRight.LocationY)));
 
   private final Field2d m_field = new Field2d();
-
-  private final PIDController xController = new PIDController(4.0, 0.0, 0.0);
-  private final PIDController yController = new PIDController(4.0, 0.0, 0.0);
   private final PIDController headingController = new PIDController(4, 0.0, 0.0);
 
   private boolean holonomicControllerActive = false;
@@ -442,20 +437,6 @@ public class Drive extends SubsystemBase {
     };
   }
 
-  public void followTrajectory(SwerveSample sample) {
-    // Get the current pose of the robot
-    Pose2d pose = getPose();
-
-    // Generate the next speeds for the robot
-    ChassisSpeeds speeds = new ChassisSpeeds(
-        sample.vx + xController.calculate(pose.getX(), sample.x),
-        sample.vy + yController.calculate(pose.getY(), sample.y),
-        sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
-
-    // Apply the generated speeds
-    // Changed from driveFieldRelative to runVelocity
-    runVelocity(speeds);
-  }
 
   public Command driveToPose(Pose2d pose) {
     return Commands.sequence(
@@ -483,21 +464,7 @@ public class Drive extends SubsystemBase {
         runOnce(this::stop)).finallyDo(() -> holonomicControllerActive = false);
   }
 
-  public Command driveToBarge() {
-    return Commands.defer(
-      ()-> {
-      double currentPoseY = getPose().getY() ;
-      double xToGo = 7.5565;
-      //TODO add red side;
-      Pose2d toGo = new Pose2d(xToGo, currentPoseY, new Rotation2d(0));
-      return driveToPose(toGo);
-
-      }, 
-      Set.of(this)
-    );
-  }
-
-  public Command driveforwardBargeScore(double xValue) {
+  public Command driveFromCurrentPose(double xValue) {
     return Commands.defer(
       () -> {
         return driveToPoseBarge(new Pose2d(xValue, getPose().getY(), new Rotation2d(0)));

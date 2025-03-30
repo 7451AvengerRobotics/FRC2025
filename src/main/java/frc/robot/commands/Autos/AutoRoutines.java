@@ -6,15 +6,16 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Index;
 import frc.robot.subsystems.SuperStructure;
 import frc.robot.subsystems.Claw.Claw;
 import frc.robot.subsystems.Claw.ClawPivot;
 import frc.robot.subsystems.Claw.ClawPivot.PivotPos;
+import frc.robot.subsystems.Elevator.EleHeight;
 import frc.robot.subsystems.Intake.Intake;
 import frc.robot.subsystems.Intake.IntakePivot;
+import frc.robot.subsystems.Intake.IntakePivot.IntakePos;
 import frc.robot.subsystems.Swerve.Drive;
 
 public class AutoRoutines {
@@ -43,402 +44,72 @@ public class AutoRoutines {
     
 
     public Command bargeSideLoli() {
-        Trigger stallClaw = new Trigger(claw::motorStall);
         return Commands.sequence(
                 clawPivot.pivotClaw(() -> PivotPos.L2),
                 Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
                     new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
-                        drive.followPPPathCommand("Loli1").until(intake::getIntakeBreak),
-                                Commands.sequence(
-                                superStruc.resetEverything()
-                                )
-                                //superStruc.intake(stallClaw))
-                        ),
-                drive.followPPPathCommand("Score2"),
+                        drive.followPPPathCommand("Loli1"),
+                        Commands.sequence(
+                                superStruc.resetEverything(),
+                                intakeMove()
+                        )
+                ).until(intake::getIntakeBreak),
+                Commands.parallel(
+                        drive.followPPPathCommand("Score2"),
+                        completeIntake().andThen(superStruc.resetEverything())
+                ),
                 Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
-                    new Rotation2d())))
-                
-                
-                
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4),
+                Commands.parallel(
+                        drive.followPPPathCommand("Loli2"),
+                        Commands.sequence(
+                                superStruc.resetEverything(),
+                                intakeMove()
+                        )
+                ).until(intake::getIntakeBreak),
+                Commands.parallel(
+                        drive.followPPPathCommand("Score3"),
+                        completeIntake().andThen(superStruc.resetEverything())
+                ),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, -0.21), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4)
         );
-
-        
+    
     }
 
 
+    // Helper methods
 
-    public Command centerAuto() {
+    private Command intakeMove() {
+        return Commands.parallel(
+                intake.setintakePower(1).until(intake::getIntakeBreak),
+                intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
+                .andThen(
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)
+                        .onlyIf(intake::propIntake)
+                        .alongWith(
+                                intake.setintakePower(1).until(intake::getIntakeBreak)));
+    }
+
+    private Command completeIntake() {
         return Commands.sequence(
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
                 Commands.parallel(
-                        drive.followPPPathCommand("Center"),
-                        (elevator.setElevatorPosition(5.5)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))),
+                        elevator.toHeightCoral(() -> EleHeight.INTAKE),
+                        clawPivot.pivotClaw(() -> PivotPos.INTAKE)
+                ),
+                Commands.waitUntil(elevator::atIntakeSetPoint),
                 Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.56, -0.18),
-                                        new Rotation2d(0))),
-                        clawPivot.setClawPivotAngle(-0.008).until(clawPivot::endCommand))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(
-                        drive.followPPPathCommand("AlgaeGrab"),
-                        clawPivot.setClawPivotAngle(0.03).withTimeout(0.5)),
-                Commands.parallel(
-                        elevator.setElevatorPosition(1.4),
-                        drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(
-                                new Translation2d(0.48, 0), new Rotation2d(0))),
-                        claw.setClawPower(0.4).withTimeout(0.75)),
-                Commands.parallel(
-                        drive.followPPPathCommand("SourceDrive"),
-                        claw.setClawPower(0.4)));
+                        intake.setintakePower(0.3),
+                        index.setIndexPower(0.4),
+                        claw.setClawPower(0.85),
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke)
+        );
     }
 
-    public Command processorSide2L4Coral() {
-        return Commands.sequence(
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-                        drive.followPPPathCommand("InitialRightSide"),
-                        (elevator.setElevatorPosition(5.5)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.66, -0.24),
-                                        new Rotation2d(0))),
-                        clawPivot.setClawPivotAngle(-0.008).until(clawPivot::endCommand))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef5Path1"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5)
-                                                .andThen(elevator
-                                                        .setElevatorPosition(
-                                                                5.5)
-                                                        .until(
-                                                                elevator::endCommand)
-                                                        .onlyIf(
-                                                                clawPivot::clawClear)))),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.72, -0.24),
-                                        new Rotation2d(0))),
-                        clawPivot.setClawPivotAngle(-0.008).until(clawPivot::endCommand))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("ReefToSource2"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef5Path2"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5)
-                                                .andThen(elevator
-                                                        .setElevatorPosition(
-                                                                5.5)
-                                                        .until(
-                                                                elevator::endCommand)
-                                                        .onlyIf(
-                                                                clawPivot::clawClear)
-                                                        .andThen(
-                                                                clawPivot.setClawPivotAngle(
-                                                                        -0.008)
-                                                                        .until(clawPivot::endCommand))))),
-                Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.72, 0.24), new Rotation2d(0)))),
-                claw.setClawPower(0.4).until(claw::notClawBroke));
-    }
-
-    public Command processorSide2L2Coral() {
-        return Commands.sequence(
-                drive.followPPPathCommand("InitialRightSide"),
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, -0.18),
-                                        new Rotation2d(0))),
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef5Path1"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5))),
-                Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
-                        elevator.setElevatorPosition(5.5)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear)
-                                .andThen(
-                                        clawPivot.setClawPivotAngle(-0.008)
-                                                .until(clawPivot::endCommand)))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
-    }
-
-    public Command bargeSide2L2Coral() {
-        return Commands.sequence(
-                drive.followPPPathCommand("BargeScore1"),
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, 0.15),
-                                        new Rotation2d(0))),
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("Source1"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("BargeScore2"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5))),
-                Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
-                        elevator.setElevatorPosition(5.5)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear)
-                                .andThen(
-                                        clawPivot.setClawPivotAngle(-0.008)
-                                                .until(clawPivot::endCommand)))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
-    }
-
-    public Command processorSide3L2Coral() {
-        return Commands.sequence(
-                drive.followPPPathCommand("InitialRightSide"),
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, -0.18),
-                                        new Rotation2d(0))),
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef0Path1"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5))),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, -0.18),
-                                        new Rotation2d(0))),
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("Reef0Source"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef0Path2"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5))),
-                Commands.parallel(
-                        drive.driveToClosestReefScoringFaceWithTranslate(
-                                new Transform2d(new Translation2d(0.52, 0.15),
-                                        new Rotation2d(0))),
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
-    }
-
-
-    public Command processorRedSide2L2Coral() {
-        return Commands.sequence(
-                drive.followPPPathCommand("InitialRightSide"),
-                clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-                        elevator.setElevatorPosition(1.9)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)),
-                Commands.parallel(drive.followPPPathCommand("ReefToSource1"), Commands.parallel(
-                        intakePivot.setIntakePivotAngle(0),
-                        elevator.setElevatorPosition(0.0002),
-                        clawPivot.setClawPivotAngle(0.03)).withTimeout(0.5).andThen(Commands
-                                .parallel(
-                                        intake.setintakePower(1),
-                                        intakePivot.setIntakePivotAngle(0.36))
-                                .until(intake::getIntakeBreak))),
-                Commands.parallel(
-                        drive.followPPPathCommand("Reef5Path1"),
-                        Commands.parallel(
-                                intake.setintakePower(0.5),
-                                index.setIndexPower(0.7),
-                                claw.setClawPower(0.1),
-                                clawPivot.setClawPivotAngle(-0.058),
-                                intakePivot.setIntakePivotAngle(.2))
-                                .until(claw::clawBroke)
-                                .andThen(
-                                        Commands.parallel(
-                                                intakePivot.setIntakePivotAngle(
-                                                        0),
-                                                clawPivot.setClawPivotAngle(
-                                                        0.03))
-                                                .withTimeout(0.5))),
-                Commands.parallel(drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(new Translation2d(0.56, -0.18), new Rotation2d(0))),
-                        elevator.setElevatorPosition(5.5)
-                                .until(
-                                        elevator::endCommand)
-                                .onlyIf(
-                                        clawPivot::clawClear)
-                                .andThen(
-                                        clawPivot.setClawPivotAngle(-0.008)
-                                                .until(clawPivot::endCommand)))
-                        .andThen(claw.setClawPower(0.4).until(claw::notClawBroke)));
-    }
-
-    public Command redTest() {
-        return Commands.sequence(
-        drive.followPPPathCommand("Initial Red"), 
-                // clawPivot.setClawPivotAngle(0.03).until(clawPivot::clawClear),
-                Commands.parallel(
-        drive.driveToClosestReefScoringFaceWithTranslate(
-                new Transform2d(new Translation2d(0.52, -0.18),
-                        new Rotation2d(0))),
-        elevator.setElevatorPosition(1.9)
-                .until(
-                        elevator::endCommand)
-                .onlyIf(
-                        clawPivot::clawClear)));
-    }
 
 }
+
