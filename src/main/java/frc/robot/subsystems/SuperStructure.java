@@ -62,12 +62,12 @@ public class SuperStructure {
                         ele::getLimitSwitch),
                 Commands.deadline(
                         ele.toHeightCoral(() -> EleHeight.RESET),
-                        index.setIndexPower(0),
-                        intake.setintakePower(0),
+                        index.setIndexPower(0).withTimeout(0.1),
+                        intake.setintakePower(0).withTimeout(0.1),
                         climb.setClimberAngle(() -> ClimberPos.STOW)),
                 Commands.waitUntil(ele::getLimitSwitch),
                 clawPivot.pivotClaw(() -> PivotPos.RESET),
-                Commands.waitUntil(climb::endClimbCommand), // Change to elevator safe zone
+                // Commands.waitUntil(climb::endClimbCommand), // Change to elevator safe zone
                 intakePivot.setIntakePos(() -> IntakePos.STOW)
         );
     }
@@ -78,27 +78,31 @@ public class SuperStructure {
             () -> {
                 return Commands.sequence(
                     Commands.either(
-                            intakeDown(),
+                        intakeDown().andThen(stow()),
+                        Commands.parallel(
+                            claw.setClawPower(-1),
                             Commands.parallel(
-                                claw.setClawPower(-1),
-                                Commands.parallel(
-                                    intake.setintakePower(1).until(intake::getIntakeBreak),
-                                    intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
+                                intake.setintakePower(1).until(intake::getIntakeBreak),
+                                intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
+                                .andThen(
+                                    intakePivot.setIntakePos(() -> IntakePos.INTAKING)
+                                    .onlyIf(intake::propIntake)
+                                    .alongWith(
+                                        intake.setintakePower(1).until(intake::getIntakeBreak)))
                                     .andThen(
-                                        intakePivot.setIntakePos(() -> IntakePos.INTAKING)
-                                        .onlyIf(intake::propIntake)
-                                        .alongWith(
-                                            intake.setintakePower(1).until(intake::getIntakeBreak)))
-                                        .andThen(
-                                            intakePivot.setIntakePos(() -> IntakePos.STOW)
-                                        )
-                            ),
+                                        intakePivot.setIntakePos(() -> IntakePos.STOW)
+                                    )
+                            ).andThen(stow()),
+                            
+
                             clawStall.negate().and(ele::safeToIntake))
                     );
             }, 
         Set.of(claw, clawPivot, intakePivot, intake, index, ele));
 
     }
+
+
 
     
 
@@ -130,10 +134,28 @@ public class SuperStructure {
             );
         }
 
+    public Command intakeWithBall() {
+        return
+                Commands.parallel(
+                    claw.setClawPower(-1),
+                    Commands.parallel(
+                        intake.setintakePower(1).until(intake::getIntakeBreak),
+                        intakePivot.setIntakePos(() -> IntakePos.INTAKE)).until(intake::propIntake)
+                        .andThen(
+                            intakePivot.setIntakePos(() -> IntakePos.INTAKING)
+                            .onlyIf(intake::propIntake)
+                            .alongWith(
+                                intake.setintakePower(1).until(intake::getIntakeBreak)))
+                            .andThen(
+                                intakePivot.setIntakePos(() -> IntakePos.STOW)
+                            )
+                    ).andThen(stow());
+    }
+
     public Command stow() {
         return Commands.sequence(
-                clawPivot.setClawPivotAngle(PivotPos.L2),
-                ele.setElevatorPosition(0).until(ele::getLimitSwitch),
+                clawPivot.pivotClaw(() -> PivotPos.L2),
+                ele.toHeightCoral(() -> EleHeight.RESET),
                 intakePivot.setIntakePos(() -> IntakePos.STOW)
                 );
     }
@@ -229,11 +251,21 @@ public class SuperStructure {
                 claw.setClawPower(0.5),
                 ele.toHeightCoral(() -> EleHeight.INTAKE),
                 clawPivot.pivotClaw(() -> PivotPos.INTAKE),
-                intakePivot.setIntakePos(() -> IntakePos.INTAKING)).withTimeout(0.2).andThen(
-                        Commands.parallel(
+                intakePivot.setIntakePos(() -> IntakePos.INTAKING)).withTimeout(0.2)
+                    .andThen(
+                        Commands.waitUntil(
+                            ele::atIntakeSetPoint
+                        ),
+                        Commands.waitUntil(clawPivot::atReset)).andThen(
+                            Commands.parallel(
                                 intake.setintakePower(0.5),
                                 index.setIndexPower(0.5),
-                                claw.setClawPower(0.7)).until(claw::clawBroke));
+                                claw.setClawPower(0.7)).until(claw::clawBroke)
+                );
+    }
+
+    public Command groundIntakeAlgae() {
+        return Commands.parallel(intakePivot.setIntakePos(() -> IntakePos.INTAKING), intake.setintakePower(-0.5));
     }
 
     public Command setReefLvl() {
@@ -243,12 +275,16 @@ public class SuperStructure {
                     Command reefPosition = setL2();
                     if (reefLvl == 1) {
                         reefPosition = setL1();
+                        SmartDashboard.putString("State Level", "L1");
                     } else if (reefLvl == 2) {
                         reefPosition = setL2();
+                        SmartDashboard.putString("State Level", "L2");
                     } else if (reefLvl == 3) {
                         reefPosition = setL3();
+                        SmartDashboard.putString("State Level", "L3");
                     } else if (reefLvl == 4) {
                         reefPosition = setL4();
+                        SmartDashboard.putString("State Level", "L4");
                     }
                     return Commands.sequence(
                             Commands.waitUntil(claw::clawBroke),
@@ -337,7 +373,7 @@ public class SuperStructure {
     public Command climb() {
         return Commands.parallel(
                 clawPivot.setClawPivotAngle(0),
-                climb.setClimberPower(0.37)
+                climb.setClimberPower(0.5)
                         .until(climb::endClimbSeq).finallyDo(
                                 () -> climb.setAngle(0.25)));
     }

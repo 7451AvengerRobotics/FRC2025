@@ -114,7 +114,7 @@ public class Climber extends SubsystemBase {
     }
 
     public boolean endClimbSeq() {
-        if ((climber.getPosition().getValueAsDouble() > 0.23 && climber.getPosition().getValueAsDouble() < 0.26)) {
+        if ((climber.getPosition().getValueAsDouble() > 0.24 && climber.getPosition().getValueAsDouble() < 0.26)) {
             return true;
         }
         return false;

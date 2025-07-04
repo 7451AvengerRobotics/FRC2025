@@ -109,8 +109,8 @@ public class RobotContainer {
         vision = new Vision(
             drive::addVisionMeasurement,
             new VisionIOPhotonVision(VisionConstants.backRight, VisionConstants.backRightTransform3d),
-            new VisionIOPhotonVision(VisionConstants.backLeft, VisionConstants.backLeftTransform3d),
-            new VisionIOPhotonVision(VisionConstants.frontRight, VisionConstants.frontRightTransform3d)
+            new VisionIOPhotonVision(VisionConstants.backLeft, VisionConstants.backLeftTransform3d)
+            //new VisionIOPhotonVision(VisionConstants.frontRight, VisionConstants.frontRightTransform3d)
             //new VisionIOPhotonVision(VisionConstants.limelight1Camera, VisionConstants.limelight2Transform3d)
         );
 
@@ -201,7 +201,7 @@ public class RobotContainer {
                 controller.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-    stowClaw.onTrue(superStructure.stow());
+    // stowClaw.onTrue(superStructure.stow());
     stallClaw.and(eleLow.negate()).whileTrue(new setLedColorCommand(led, 0, 255, 200));
     led.setDefaultCommand((
         new setLedColorCommand(led, 255, 0, 0)
@@ -253,7 +253,7 @@ public class RobotContainer {
     // intake
     controller.R2().onTrue(
         Commands.defer(
-            ()-> superStructure.intake(stallClaw), 
+            ()-> Commands.either(superStructure.intakeDown(), superStructure.intakeWithBall(), stallClaw.negate()),
             Set.of(intake))
             .andThen(
                 superStructure.resetEverything()
@@ -262,6 +262,8 @@ public class RobotContainer {
                 new setLedColorCommand(led, 255, 255, 255)
             )
     );
+
+    manip.L2().onTrue(superStructure.intakeWithBall());
 
     // fix intake
     manip.triangle().onTrue(
@@ -274,10 +276,10 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.69, 0.13), 
+                    new Transform2d(new Translation2d(0.64, 0.13), 
                     new Rotation2d()
                 ),
-                manip),
+                manip).withTimeout(2),
                 superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.R2()),
@@ -285,7 +287,7 @@ public class RobotContainer {
         )
     ).onFalse(
         Commands.sequence(
-            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.2)),
             superStructure.resetEverything()
         )
     );
@@ -296,11 +298,11 @@ public class RobotContainer {
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
                     new Transform2d(
-                        new Translation2d(0.69, -0.21),
+                        new Translation2d(0.64, -0.21),
                         new Rotation2d()
                     ),
                     manip
-                ),
+                ).withTimeout(2),
                 superStructure.setReefLvl()
             ),
             Commands.waitUntil(manip.R2()),
@@ -308,7 +310,7 @@ public class RobotContainer {
         )
     ).onFalse(
         Commands.sequence(
-            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.2)),
             superStructure.resetEverything()
         )
     );
@@ -319,7 +321,7 @@ public class RobotContainer {
                 Commands.parallel(
                     drive.driveToClosestReefScoringFaceWithTranslate(
                         new Transform2d(
-                            new Translation2d(0.63, 0),
+                            new Translation2d(0.61, 0),
                             new Rotation2d()
                         ),
                         manip
@@ -330,7 +332,7 @@ public class RobotContainer {
     ).onFalse(
         Commands.defer(
             () -> superStructure.autoSetAlgaeHeight(
-                drive.getClosestReefFace()
+                drive.getClosestReefFace()  
             ),
             Set.of(claw))
     );
@@ -339,7 +341,7 @@ public class RobotContainer {
     manip.square().whileTrue(
         Commands.sequence(
             Commands.parallel(
-                drive.driveFromCurrentPose(7.86),
+                drive.driveFromCurrentPose(7.75),
                 superStructure.setBargeAlgae()
             ),
         Commands.waitUntil(manip.R2()),
@@ -348,6 +350,19 @@ public class RobotContainer {
     ).onFalse(
         Commands.sequence(
             Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.1)),
+            superStructure.resetEverything()
+        )
+    );
+
+    manip.cross().onTrue(
+        Commands.sequence(
+        superStructure.setBargeAlgae(),
+        Commands.waitUntil(manip.R2()),
+            superStructure.outtakeAlgae()
+        )
+    ).onFalse(
+        Commands.sequence(
+            Commands.waitUntil(controller.axisMagnitudeGreaterThan(0, 0.2)),
             superStructure.resetEverything()
         )
     );
@@ -376,7 +391,7 @@ public class RobotContainer {
         superStructure.climb()
     );
 
-    controller.L2().whileTrue(
+    controller.L2().whileTrue(  
         Commands.either(
             superStructure.score(),
             superStructure.outtakeAlgae(),
@@ -388,7 +403,7 @@ public class RobotContainer {
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
                     new Transform2d(
-                        new Translation2d(0.61, 0),
+                        new Translation2d(0.57, 0),
                         new Rotation2d()
                     ),
                     manip
@@ -413,5 +428,8 @@ public class RobotContainer {
 
   public void configAutos() {
     autoChooser1.addOption("BargeLoli", autos.bargeSideLoli());
+    autoChooser1.addOption("ProcessorLoli", autos.processorSideLoli());
+    autoChooser1.addOption("ProcessorIALoli", autos.processorIALoli());
+
   }
 }

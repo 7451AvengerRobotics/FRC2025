@@ -132,7 +132,7 @@ public class Drive extends SubsystemBase {
         new PIDController(4, 0, 0),
         headingController,
         0.5,
-        new Pose2d(0.03, 0.03, Rotation2d.fromDegrees(1)),
+        new Pose2d(0.04, 0.04, Rotation2d.fromDegrees(2)),
         1);
     
     this.holonomicDriveWithPIDControllerBarge = new HolonomicDriveWithPIDController(
@@ -467,7 +467,7 @@ public class Drive extends SubsystemBase {
   public Command driveFromCurrentPose(double xValue) {
     return Commands.defer(
       () -> {
-        return driveToPoseBarge(new Pose2d(xValue, getPose().getY(), new Rotation2d(0)));
+        return driveToPoseBarge(new Pose2d(xValue, getPose().getY(),  DriverStation.getAlliance().get() == DriverStation.Alliance.Red ? new Rotation2d(Math.PI) : new Rotation2d()));
       }, 
       Set.of(this)
       );

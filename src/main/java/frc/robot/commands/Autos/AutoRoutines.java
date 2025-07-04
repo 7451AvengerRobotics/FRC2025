@@ -1,6 +1,8 @@
 
 package frc.robot.commands.Autos;
 
+import java.util.Set;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -45,44 +47,144 @@ public class AutoRoutines {
 
     public Command bargeSideLoli() {
         return Commands.sequence(
-                clawPivot.pivotClaw(() -> PivotPos.L2),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
+                
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
                     new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
-                        drive.followPPPathCommand("Loli1"),
                         Commands.sequence(
-                                superStruc.resetEverything(),
-                                intakeMove()
-                        )
+                                drive.followPPPathCommand("Loli1Retard"),
+                                drive.followPPPathCommand("FinishLoli1")
+                        ),
+                        
+                        reset(),
+                        intakeMove()
+  
                 ).until(intake::getIntakeBreak),
                 Commands.parallel(
                         drive.followPPPathCommand("Score2"),
-                        completeIntake().andThen(superStruc.resetEverything())
+                        Commands.sequence(
+                                completeIntake(),
+                                Commands.parallel(
+                                        clawPivot.pivotClaw(() -> PivotPos.L2), 
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKE))
+                        )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, 0.13), 
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
                     new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         drive.followPPPathCommand("Loli2"),
-                        Commands.sequence(
-                                superStruc.resetEverything(),
-                                intakeMove()
-                        )
+                        reset(),
+                        intakeMove()
                 ).until(intake::getIntakeBreak),
                 Commands.parallel(
                         drive.followPPPathCommand("Score3"),
-                        completeIntake().andThen(superStruc.resetEverything())
+                        Commands.sequence(
+                                completeIntake(),
+                                Commands.parallel(
+                                        clawPivot.pivotClaw(() -> PivotPos.L2), 
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKE))
+                                )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.69, -0.21), 
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
                     new Rotation2d()))),
                 superStruc.score().withTimeout(0.4)
         );
     
     }
 
+//     public Command centerAuto() {
+//         return Commands.sequence(Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+//         new Rotation2d()))),
+//         superStruc.score().withTimeout(0.4),
+//         Commands.parallel(resetEverything(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.71, 0.13)))));
+//     }
+
+
+public Command processorSideLoli() {
+        return Commands.sequence(
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4),
+                Commands.parallel(
+                        Commands.sequence(
+                                drive.followPPPathCommand("Loli3"),
+                                drive.followPPPathCommand("FinishLoli3")
+                        ),
+                        
+                        reset(),
+                        intakeMove()
+  
+                ).until(intake::getIntakeBreak),
+                Commands.parallel(
+                        drive.followPPPathCommand("ScoreOne"),
+                        Commands.sequence(
+                                completeIntake(),
+                                Commands.parallel(
+                                        clawPivot.pivotClaw(() -> PivotPos.L2), 
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKE))
+                        )
+                ),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4),
+                Commands.parallel(
+                        drive.followPPPathCommand("Loli2"),
+                        reset(),
+                        intakeMove()
+                ).until(intake::getIntakeBreak),
+                Commands.parallel(
+                        drive.followPPPathCommand("Score3"),
+                        Commands.sequence(
+                                completeIntake(),
+                                Commands.parallel(
+                                        clawPivot.pivotClaw(() -> PivotPos.L2), 
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKE))
+                                )
+                ),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4)
+        );
+    
+    }
+
+    public Command processorIALoli() {
+        return Commands.sequence(
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4),
+                Commands.parallel(
+                        Commands.sequence(
+                                drive.followPPPathCommand("Loli3"),
+                                drive.followPPPathCommand("FinishLoli3")
+                        ),
+                        
+                        reset(),
+                        intakeMove()
+  
+                ).until(intake::getIntakeBreak),
+                Commands.parallel(
+                        drive.followPPPathCommand("IAPath"),
+                        Commands.sequence(
+                                completeIntake(),
+                                Commands.parallel(
+                                        clawPivot.pivotClaw(() -> PivotPos.L2), 
+                                        intakePivot.setIntakePos(() -> IntakePos.INTAKE))
+                        )
+                ),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
+                    new Rotation2d()))),
+                superStruc.score().withTimeout(0.4));
+                
+    
+    }
+
 
     // Helper methods
+
+
 
     private Command intakeMove() {
         return Commands.parallel(
@@ -107,6 +209,38 @@ public class AutoRoutines {
                         index.setIndexPower(0.4),
                         claw.setClawPower(0.85),
                         intakePivot.setIntakePos(() -> IntakePos.INTAKING)).until(claw::clawBroke)
+        );
+    }
+
+    private Command stow() {
+        return Commands.sequence(
+                clawPivot.pivotClaw(() -> PivotPos.L2),
+                elevator.toHeightCoral(() -> EleHeight.RESET),
+                intakePivot.setIntakePos(() -> IntakePos.STOW)
+                );
+    }
+
+        private Command resetEverything() {
+        return Commands.defer(
+            () -> Commands.either(
+                stow().alongWith(claw.setClawPower(0).withTimeout(0.1)), 
+                reset().alongWith(claw.setClawPower(0).withTimeout(0.1)),
+                claw::clawBroke
+            ), 
+            Set.of(claw, clawPivot, elevator, index)
+        );
+    }
+
+    private Command reset() {
+        return Commands.sequence(
+                Commands.either(clawPivot.pivotClaw(() -> PivotPos.RESET), clawPivot.pivotClaw(() -> PivotPos.L2),
+                        elevator::getLimitSwitch),
+                Commands.deadline(
+                        elevator.toHeightCoral(() -> EleHeight.RESET),
+                        index.setIndexPower(0).withTimeout(0.1)),
+                Commands.waitUntil(elevator::getLimitSwitch),
+                clawPivot.pivotClaw(() -> PivotPos.RESET)
+                // Commands.waitUntil(climb::endClimbCommand), // Change to elevator safe zone
         );
     }
 

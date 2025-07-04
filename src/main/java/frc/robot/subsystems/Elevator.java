@@ -134,7 +134,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean dontStallClaw() {
-        return elevator.getPosition().getValueAsDouble() < 0.12;
+        return elevator.getPosition().getValueAsDouble() < 0.13;
     }
 
     public boolean safeToIntake() {
@@ -153,7 +153,7 @@ public class Elevator extends SubsystemBase {
         L1(1),
         L2(0),
         L3(1.5),
-        INTAKE(0.11),
+        INTAKE(0.115),
         L4(4.9);
 
         public final double rotations;
