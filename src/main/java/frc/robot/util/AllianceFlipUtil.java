@@ -18,11 +18,11 @@ public class AllianceFlipUtil {
   public static double fieldLength = Units.feetToMeters(57.0) + Units.inchesToMeters(6.875);
 
   public static double applyX(double x) {
-    return shouldFlip() ? fieldLength - x : x;
+    return shouldFlip() ? fieldLength - x : fieldLength - x;
   }
 
   public static double applyY(double y) {
-    return shouldFlip() ? fieldWidth - y : y;
+    return shouldFlip() ? fieldWidth - y : fieldWidth - y;
   }
 
   public static Translation2d apply(Translation2d translation) {
@@ -41,6 +41,6 @@ public class AllianceFlipUtil {
 
   public static boolean shouldFlip() {
     return DriverStation.getAlliance().isPresent()
-        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+        && (DriverStation.getAlliance().get() == DriverStation.Alliance.Red);
   }
 }

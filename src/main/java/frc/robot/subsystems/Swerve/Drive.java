@@ -568,7 +568,17 @@ public class Drive extends SubsystemBase {
     : Arrays.asList(FieldConstants.Reef.blueReefs);
     return Commands.defer(
         () -> {
-
+          // if (reefCenterPosesList.equals(Arrays.asList(FieldConstants.Reef.redReefs))) {
+          //     System.out.println("Red");
+          // } else if (reefCenterPosesList.equals(Arrays.asList(FieldConstants.Reef.blueReefs))) {
+          //     System.out.println("Blue");
+          // } else {
+          //     System.out.println("Null");
+          // }
+          
+          System.out.println(Robot.IsRedAlliance.getAsBoolean());
+          System.out.println(reefCenterPosesList);
+          
           final Pose2d currentPose = getPose();
           final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
           Pose2d drivePose = nearestCoralSide.plus(transform2d);

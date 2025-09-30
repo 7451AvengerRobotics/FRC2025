@@ -87,16 +87,36 @@ public class FieldConstants {
                 Units.inchesToMeters(130.144),
                 Rotation2d.fromDegrees(-120));
 
+
+                public static final Pose2d redReef0 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(144.0945),
+                        fieldWidth - Units.inchesToMeters(158.6614),
+                        Rotation2d.fromDegrees(180));
+                public static final Pose2d redReef1 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(160.373),
+                        fieldWidth - Units.inchesToMeters(186.857),
+                        Rotation2d.fromDegrees(120));
+                public static final Pose2d redReef2 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(193.116),
+                        fieldWidth - Units.inchesToMeters(186.858),
+                        Rotation2d.fromDegrees(60));
+                public static final Pose2d redReef3 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(209.489),
+                        fieldWidth - Units.inchesToMeters(158.502),
+                        Rotation2d.fromDegrees(0));
+                public static final Pose2d redReef4 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(193.118),
+                        fieldWidth - Units.inchesToMeters(130.145),
+                        Rotation2d.fromDegrees(-60));
+        
+                public static final Pose2d redReef5 = new Pose2d(
+                        fieldLength - Units.inchesToMeters(160.375),
+                        fieldWidth - Units.inchesToMeters(130.144),
+                        Rotation2d.fromDegrees(-120));
+
         public static final Pose2d[] blueReefs = { reef0, reef1, reef2, reef3, reef4, reef5 };
 
-        public static final Pose2d[] redReefs = {
-                AllianceFlipUtil.apply(reef0),
-                AllianceFlipUtil.apply(reef1),
-                AllianceFlipUtil.apply(reef2),
-                AllianceFlipUtil.apply(reef3),
-                AllianceFlipUtil.apply(reef4),
-                AllianceFlipUtil.apply(reef5) 
-        };
+        public static final Pose2d[] redReefs = {redReef0, redReef1, redReef2, redReef3, redReef4, redReef5};
 
         // Initialize branch positions
 

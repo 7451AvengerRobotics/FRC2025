@@ -52,7 +52,7 @@ public class Robot extends LoggedRobot {
 
   public static final BooleanSupplier IsRedAlliance = () -> {
         final Optional<DriverStation.Alliance> alliance = DriverStation.getAlliance();
-        return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+        return alliance.isPresent() && (alliance.get() == DriverStation.Alliance.Red);
     };
   
   @SuppressWarnings("resource")
