@@ -163,8 +163,8 @@ public class Drive extends SubsystemBase {
         PP_CONFIG,
         () -> {
           var alliance =  DriverStation.getAlliance();
-          if (alliance.isPresent()) {
-            return alliance.get() == DriverStation.Alliance.Red;
+          if (Robot.IsRedAlliance.getAsBoolean()) {
+            return true;
           }
           return false;
         },
@@ -564,11 +564,11 @@ public class Drive extends SubsystemBase {
   }
 
   public Command driveToClosestReefScoringFaceWithTranslate(Transform2d transform2d, CommandPS5Controller controller) {
-    final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean() ? Arrays.asList(FieldConstants.Reef.redReefs)
-    : Arrays.asList(FieldConstants.Reef.blueReefs);
+    
     return Commands.defer(
         () -> {
-
+          final List<Pose2d> reefCenterPosesList = Robot.IsRedAlliance.getAsBoolean() ? Arrays.asList(FieldConstants.Reef.redReefs)
+    : Arrays.asList(FieldConstants.Reef.blueReefs);
           final Pose2d currentPose = getPose();
           final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
           Pose2d drivePose = nearestCoralSide.plus(transform2d);

@@ -51,8 +51,16 @@ public class Robot extends LoggedRobot {
   private RobotContainer robotContainer;
 
   public static final BooleanSupplier IsRedAlliance = () -> {
-        final Optional<DriverStation.Alliance> alliance = DriverStation.getAlliance();
-        return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+    while (DriverStation.getAlliance().isEmpty()) { 
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        return false;
+      }
+    }
+    final Optional<DriverStation.Alliance> alliance = DriverStation.getAlliance();
+    return alliance.isPresent() && (alliance.get() == DriverStation.Alliance.Red);
+
     };
   
   @SuppressWarnings("resource")
