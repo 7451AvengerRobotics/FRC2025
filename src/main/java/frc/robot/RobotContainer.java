@@ -25,6 +25,7 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.ControllerUtil;
+import frc.robot.util.AllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -276,9 +277,9 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(new Translation2d(0.64, 0.13), 
+                    AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
                     new Rotation2d()
-                ),
+                )),
                 manip).withTimeout(2),
                 superStructure.setReefLvl()
             ),
@@ -297,10 +298,10 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(
+                    AllianceFlipUtil.apply(new Transform2d(
                         new Translation2d(0.64, -0.21),
                         new Rotation2d()
-                    ),
+                    )),
                     manip
                 ).withTimeout(2),
                 superStructure.setReefLvl()
@@ -320,10 +321,10 @@ public class RobotContainer {
             Commands.defer(() -> 
                 Commands.parallel(
                     drive.driveToClosestReefScoringFaceWithTranslate(
-                        new Transform2d(
+                        AllianceFlipUtil.apply(new Transform2d(
                             new Translation2d(0.61, 0),
                             new Rotation2d()
-                        ),
+                        )),
                         manip
                     ).withTimeout(2),
                     superStructure.autoSetAlgaeHeight(drive.getClosestReefFace())),
@@ -402,10 +403,10 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    new Transform2d(
+                    AllianceFlipUtil.apply(new Transform2d(
                         new Translation2d(0.57, 0),
                         new Rotation2d()
-                    ),
+                    )),
                     manip
                 ),
                 superStructure.setL1()

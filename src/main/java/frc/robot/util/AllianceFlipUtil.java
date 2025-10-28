@@ -9,6 +9,7 @@ package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -37,6 +38,10 @@ public class AllianceFlipUtil {
     return shouldFlip()
         ? new Pose2d(apply(pose.getTranslation()), apply(pose.getRotation()))
         : pose;
+  }
+
+  public static Transform2d apply(Transform2d transform) {
+    return new Transform2d(apply(transform.getTranslation()), apply(transform.getRotation()));
   }
 
   public static boolean shouldFlip() {
