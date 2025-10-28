@@ -277,9 +277,9 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Transform2d(new Translation2d(0.64, 0.13), 
                     new Rotation2d()
-                )),
+                ),
                 manip).withTimeout(2),
                 superStructure.setReefLvl()
             ),
@@ -298,10 +298,10 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    AllianceFlipUtil.apply(new Transform2d(
+                    new Transform2d(
                         new Translation2d(0.64, -0.21),
                         new Rotation2d()
-                    )),
+                    ),
                     manip
                 ).withTimeout(2),
                 superStructure.setReefLvl()
@@ -321,10 +321,10 @@ public class RobotContainer {
             Commands.defer(() -> 
                 Commands.parallel(
                     drive.driveToClosestReefScoringFaceWithTranslate(
-                        AllianceFlipUtil.apply(new Transform2d(
+                        new Transform2d(
                             new Translation2d(0.61, 0),
                             new Rotation2d()
-                        )),
+                        ),
                         manip
                     ).withTimeout(2),
                     superStructure.autoSetAlgaeHeight(drive.getClosestReefFace())),
@@ -403,10 +403,10 @@ public class RobotContainer {
         Commands.sequence(
             Commands.parallel(
                 drive.driveToClosestReefScoringFaceWithTranslate(
-                    AllianceFlipUtil.apply(new Transform2d(
+                    new Transform2d(
                         new Translation2d(0.57, 0),
                         new Rotation2d()
-                    )),
+                    ),
                     manip
                 ),
                 superStructure.setL1()

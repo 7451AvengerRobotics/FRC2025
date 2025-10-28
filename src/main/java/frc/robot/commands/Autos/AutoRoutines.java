@@ -49,8 +49,8 @@ public class AutoRoutines {
     public Command bargeSideLoli() {
         return Commands.sequence(
                 
-                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
-                    new Rotation2d())))),
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         Commands.sequence(
@@ -71,8 +71,8 @@ public class AutoRoutines {
                                         intakePivot.setIntakePos(() -> IntakePos.INTAKE))
                         )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, -0.21), 
-                    new Rotation2d())))),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         drive.followPPPathCommand("Loli2"),
@@ -88,8 +88,8 @@ public class AutoRoutines {
                                         intakePivot.setIntakePos(() -> IntakePos.INTAKE))
                                 )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
-                    new Rotation2d())))),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4)
         );
     
@@ -105,8 +105,8 @@ public class AutoRoutines {
 
 public Command processorSideLoli() {
         return Commands.sequence(
-                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
-                    new Rotation2d())))),
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         Commands.sequence(
@@ -127,8 +127,8 @@ public Command processorSideLoli() {
                                         intakePivot.setIntakePos(() -> IntakePos.INTAKE))
                         )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, -0.21), 
-                    new Rotation2d())))),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         drive.followPPPathCommand("Loli2"),
@@ -144,8 +144,8 @@ public Command processorSideLoli() {
                                         intakePivot.setIntakePos(() -> IntakePos.INTAKE))
                                 )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
-                    new Rotation2d())))),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4)
         );
     
@@ -153,8 +153,8 @@ public Command processorSideLoli() {
 
     public Command processorIALoli() {
         return Commands.sequence(
-                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, 0.13), 
-                    new Rotation2d())))),
+                Commands.parallel(Commands.sequence(clawPivot.pivotClaw(() -> PivotPos.L2), superStruc.setL4()), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, 0.13), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4),
                 Commands.parallel(
                         Commands.sequence(
@@ -175,8 +175,8 @@ public Command processorSideLoli() {
                                         intakePivot.setIntakePos(() -> IntakePos.INTAKE))
                         )
                 ),
-                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(AllianceFlipUtil.apply(new Transform2d(new Translation2d(0.64, -0.21), 
-                    new Rotation2d())))),
+                Commands.parallel(superStruc.setL4(), drive.driveToClosestReefScoringFaceWithTranslate(new Transform2d(new Translation2d(0.64, -0.21), 
+                    new Rotation2d()))),
                 superStruc.score().withTimeout(0.4));
                 
     
